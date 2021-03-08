@@ -160,7 +160,7 @@ class AgentRunner:
     Agent callback runner (called by backend).
     """
 
-    def __init__(self, train, agent_name, code_name, result_queue):
+    def __init__(self, gui_mode, train, agent_name, code_name, result_queue):
         self.agent_name = agent_name
         self.code_name = code_name
         self.result_queue = result_queue
@@ -182,6 +182,7 @@ class AgentRunner:
 
         self.fake_self = SimpleNamespace()
         self.fake_self.train = train
+        self.fake_self.gui_mode = gui_mode
 
         self.wlogger = logging.getLogger(self.agent_name + '_wrapper')
         self.wlogger.setLevel(s.LOG_AGENT_WRAPPER)
@@ -224,7 +225,8 @@ class AgentBackend:
     Base class connecting the agent to a callback implementation.
     """
 
-    def __init__(self, train, agent_name, code_name, result_queue):
+    def __init__(self, gui_mode, train, agent_name, code_name, result_queue):
+        self.gui_mode = gui_mode
         self.train = train
         self.code_name = code_name
         self.agent_name = agent_name
@@ -257,12 +259,12 @@ class SequentialAgentBackend(AgentBackend):
     AgentConnector realised by a separate thread (easy debugging).
     """
 
-    def __init__(self, train, agent_name, code_name):
-        super().__init__(train, agent_name, code_name, queue.Queue())
+    def __init__(self, gui_mode, train, agent_name, code_name):
+        super().__init__(gui_mode, train, agent_name, code_name, queue.Queue())
         self.runner = None
 
     def start(self):
-        self.runner = AgentRunner(self.train, self.agent_name, self.code_name, self.result_queue)
+        self.runner = AgentRunner(self.gui_mode, self.train, self.agent_name, self.code_name, self.result_queue)
 
     def send_event(self, event_name, *event_args):
         prev_cwd = os.getcwd()
@@ -276,8 +278,8 @@ class SequentialAgentBackend(AgentBackend):
 QUIT = "quit"
 
 
-def run_in_agent_runner(train: bool, agent_name: str, code_name: str, wta_queue: mp.Queue, atw_queue: mp.Queue):
-    runner = AgentRunner(train, agent_name, code_name, atw_queue)
+def run_in_agent_runner(gui_mode, train: bool, agent_name: str, code_name: str, wta_queue: mp.Queue, atw_queue: mp.Queue):
+    runner = AgentRunner(gui_mode, train, agent_name, code_name, atw_queue)
     while True:
         event_name, event_args = wta_queue.get()
         if event_name == QUIT:
@@ -290,12 +292,12 @@ class ProcessAgentBackend(AgentBackend):
     AgentConnector realised by a separate process (fast and safe mode).
     """
 
-    def __init__(self, train, agent_name, code_name):
-        super().__init__(train, agent_name, code_name, mp.Queue())
+    def __init__(self, gui_mode, train, agent_name, code_name):
+        super().__init__(gui_mode, train, agent_name, code_name, mp.Queue())
 
         self.wta_queue = mp.Queue()
 
-        self.process = mp.Process(target=run_in_agent_runner, args=(self.train, self.agent_name, self.code_name, self.wta_queue, self.result_queue))
+        self.process = mp.Process(target=run_in_agent_runner, args=(self.gui_mode, self.train, self.agent_name, self.code_name, self.wta_queue, self.result_queue))
 
     def start(self):
         self.process.start()

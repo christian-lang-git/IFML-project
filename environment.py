@@ -46,8 +46,11 @@ class GenericWorld:
     def __init__(self, args: WorldArgs):
         self.setup_logging()
         self.args = args
+        self.gui_mode = True
         if self.args.no_gui:
             self.gui = None
+            self.gui_mode = False
+            print("NO GUI")
         else:
             self.gui = GUI(args, self)
 
@@ -74,7 +77,7 @@ class GenericWorld:
         assert len(self.agents) < s.MAX_AGENTS
 
         # if self.args.single_process:
-        backend = SequentialAgentBackend(train, name, agent_dir)
+        backend = SequentialAgentBackend(self.gui_mode, train, name, agent_dir)
         # else:
         # backend = ProcessAgentBackend(train, name, agent_dir)
         backend.start()
@@ -256,6 +259,13 @@ class GenericWorld:
             self.logger.info('Maximum number of steps reached, wrap up round')
             return True
 
+        #region ADDED CODE
+        for a in self.agents:
+            if hasattr(a.backend.runner.fake_self, "request_termination"):
+                if a.backend.runner.fake_self.request_termination:
+                    return True
+        #endregion
+
         return False
 
     def render(self):
@@ -320,7 +330,13 @@ class BombeRLeWorld(GenericWorld):
         self.round_id = f'Replay {datetime.now().strftime("%Y-%m-%d %H-%M-%S")}'
 
         # Arena with wall and crate layout
-        self.arena = (np.random.rand(s.COLS, s.ROWS) < s.CRATE_DENSITY).astype(int)
+        #self.arena = (np.random.rand(s.COLS, s.ROWS) < s.CRATE_DENSITY).astype(int)
+        crate_density_list = [0.0, 0.3, 0.75]
+        #crate_density_list = [0.0]
+        crate_index = self.round % len(crate_density_list)
+        crate_density = crate_density_list[crate_index]
+        #print("crate_density: ", crate_density)  
+        self.arena = (np.random.rand(s.COLS, s.ROWS) < crate_density).astype(int)
         self.arena[:1, :] = -1
         self.arena[-1:, :] = -1
         self.arena[:, :1] = -1
