@@ -1,0 +1,6 @@
+second try for 2nd task
+agent_13:
++ avoids death
++ collects coins
+- places bombs "everywhere"
+- does not always collect all coins

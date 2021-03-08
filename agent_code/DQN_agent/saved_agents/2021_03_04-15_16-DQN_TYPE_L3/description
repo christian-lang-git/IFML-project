@@ -1,0 +1,5 @@
+agent 76
+
++ works in all 3 types of density
+
+- easily gets stuck in a loop walking between two tiles
