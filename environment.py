@@ -331,8 +331,8 @@ class BombeRLeWorld(GenericWorld):
 
         # Arena with wall and crate layout
         #self.arena = (np.random.rand(s.COLS, s.ROWS) < s.CRATE_DENSITY).astype(int)
-        crate_density_list = [0.0, 0.3, 0.75]
-        #crate_density_list = [0.0]
+        #crate_density_list = [0.0, 0.3, 0.75]
+        crate_density_list = [0.0]
         crate_index = self.round % len(crate_density_list)
         crate_density = crate_density_list[crate_index]
         #print("crate_density: ", crate_density)  
