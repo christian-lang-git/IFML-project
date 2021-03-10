@@ -745,5 +745,11 @@ def process_linear_small(game_state: dict, preprocessing_result) -> np.array:
 
 def process_convolution(game_state: dict, preprocessing_result) -> np.array:
     #print("process_convolution")
-    return np.stack((preprocessing_result[PRE_INDEX_PLAYERS], preprocessing_result[PRE_INDEX_COIN_VALUES]))
-
+    return np.stack((
+        preprocessing_result[PRE_INDEX_PLAYERS], 
+        preprocessing_result[PRE_INDEX_COIN_VALUES],
+        preprocessing_result[PRE_INDEX_CRATE_VALUE],
+        preprocessing_result[PRE_INDEX_CRATE_POTENTIAL_SCALED],
+        preprocessing_result[PRE_INDEX_DANGER_REPULSOR],
+        preprocessing_result[PRE_INDEX_VISITED_PENALTY],
+        ))

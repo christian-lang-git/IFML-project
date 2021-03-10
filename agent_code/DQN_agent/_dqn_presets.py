@@ -38,22 +38,22 @@ MODEL_ARCHITECTURE_DQN_TYPE_L3 = {
 MODEL_ARCHITECTURE_DQN_TYPE_C1L2 = {
     "model_type": DQN_TYPE_C1L2,
     "process_type": PROCESS_CONVOLUTION,
-    "dim_input": [2, 17, 17],
+    "dim_input": [6, 17, 17],
     "dim_output": NUM_ACTIONS,
-    "dim_layer_full_1": 16,
-    "dim_layer_full_2": 16,
+    "dim_layer_full_1": 128,
+    "dim_layer_full_2": 128,
 }
 MODEL_ARCHITECTURE_DQN_TYPE_C3L1 = {
     "model_type": DQN_TYPE_C3L1,
     "process_type": PROCESS_CONVOLUTION,
-    "dim_input": [2, 17, 17],
+    "dim_input": [6, 17, 17],
     "dim_output": NUM_ACTIONS,
     "dim_layer_full_1": 256,
 }
 MODEL_ARCHITECTURE_DQN_TYPE_C3L2 = {
     "model_type": DQN_TYPE_C3L2,
     "process_type": PROCESS_CONVOLUTION,
-    "dim_input": [2, 17, 17],
+    "dim_input": [6, 17, 17],
     "dim_output": NUM_ACTIONS,
     "dim_layer_full_1": 16,
     "dim_layer_full_2": 16,
