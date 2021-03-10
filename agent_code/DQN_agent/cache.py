@@ -2,9 +2,10 @@ import copy
 
 class Cache():
 
-    def __init__(self):       
+    def __init__(self, name):       
         print("__init__ Cache")     
         #store parameters
+        self.name = name
         self.data_old = {}
         self.data_new = {}
         self.turn_index_old = -1
@@ -18,6 +19,8 @@ class Cache():
     def reset(self):
         #print("reset cache")  
         self.turn_index_old = -1
+        self.data_old = {}
+        self.data_new = {}
 
     def get_data(self, process_type, turn_index):
         #print("try to get data from turn: ", turn_index, "(", process_type, ")")
@@ -54,5 +57,6 @@ class Cache():
             self.data_new[process_type] = data
         else:
             #this will probably not happen
-            print("set_data: index error")
+            #print(self.name, " set_data: index error: ", turn_index)
+            pass
         #return self.data_old[process_type]

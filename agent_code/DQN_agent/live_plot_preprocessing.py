@@ -12,6 +12,8 @@ PRE_INDEX_SAFETY_TIME_FIELD = 4
 PRE_INDEX_FIELD = 5
 PRE_INDEX_CRATE_POTENTIAL_SCALED = 6
 PRE_INDEX_CRATE_VALUE = 7
+PRE_INDEX_VISITED = 8
+PRE_INDEX_VISITED_PENALTY = 9
 
 rows = 3
 cols = 4
@@ -36,6 +38,17 @@ def update_plot(data, fig):
     plt.clim(vmin=-0.1, vmax=1)
     fig.colorbar(img, ax=ax)
 
+    ax = fig.add_subplot(rows,cols,3)
+    ax.set(title="visited penalty")
+    img = plt.imshow(data[PRE_INDEX_VISITED_PENALTY].T, interpolation = 'nearest')
+    plt.clim(vmin=-1, vmax=1)
+    fig.colorbar(img, ax=ax)
+
+    ax = fig.add_subplot(rows,cols,4)
+    ax.set(title="visited")
+    img = plt.imshow(data[PRE_INDEX_VISITED].T, interpolation = 'nearest')
+    plt.clim(vmin=-0.1, vmax=1)
+    fig.colorbar(img, ax=ax)
 
 
     #row 2

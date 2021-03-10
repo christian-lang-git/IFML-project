@@ -156,6 +156,10 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
         #print(events)
         return
 
+    
+    append_game_state(old_game_state, self.visited_cache)
+    append_game_state(new_game_state, self.visited_cache)
+
     event_values=[None] * len(events)
     insert_events(self, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, events=events, event_values=event_values)
     update_round_train_or_validate(self, events=events, event_values=event_values, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, termination_flag=False)
@@ -165,9 +169,9 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
     #old_coin_values = old_preprocessed[1]
     #old_coin_value = old_coin_values[old_coords]
     #print("insert_events state_to_features old: ", PROCESS_LINEAR)
-    old_features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR, plot_preprocessing=self.plot_preprocessing)
+    old_features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR_FULL, plot_preprocessing=self.plot_preprocessing)
     #print("insert_events state_to_features new: ", PROCESS_LINEAR)
-    new_features = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR, plot_preprocessing=self.plot_preprocessing)
+    new_features = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR_FULL, plot_preprocessing=self.plot_preprocessing)
 
     insert_events_towards_away(self, old_features=old_features, events=events, event_values=event_values,
         feature_index=LINEAR_INDEX_COIN_VALUE_PLAYER,
@@ -191,12 +195,21 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
                 event_values.append(value)
             else:
                 events.append(E_DROPPED_BOMB_BAD)
+                event_values.append(None)
             #print("dropped bomb value: ", value)
             break
 
     #check if certain death
-    insert_events_danger_exceeded(self, old_features=old_features, new_features=new_features, events=events)
-   
+    insert_events_danger_exceeded(self, old_features=old_features, new_features=new_features, events=events, event_values=event_values)
+
+    #insert visited penalty
+    #player_coords = new_game_state["self"][3]
+    #visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_game_state["visited"][player_coords]
+    visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_features[LINEAR_INDEX_VISITED_PENALTY_PLAYER]
+    #print("visited penalty", visited_penalty)
+    events.append(E_VISITED_PENALTY)
+    event_values.append(visited_penalty)
+    
 
 def insert_events_towards_away(self, old_features, feature_index, towards_event, away_event, events: List[str], event_values: List[float]):
     #old_preprocessed = preprocess(old_game_state, plot=False)
@@ -239,7 +252,7 @@ def insert_events_towards_away(self, old_features, feature_index, towards_event,
         if self.gui_mode:
             print(old_value, new_value)
 
-def insert_events_danger_exceeded(self, old_features, new_features, events: List[str]):
+def insert_events_danger_exceeded(self, old_features, new_features, events: List[str], event_values):
     #old_preprocessed = preprocess(old_game_state, plot=False)
     #old_coin_values = old_preprocessed[1]
     #old_coin_value = old_coin_values[old_coords]
@@ -251,6 +264,7 @@ def insert_events_danger_exceeded(self, old_features, new_features, events: List
     if new_value > 0.99:
         #print(f"value should have increased from {old_coin_value} to {new_coin_value}")
         events.append(E_DANGER_EXCEEDED)
+        event_values.append(None)
         #print("DANGER EXCEEDED")
 """
     old_value = old_features[LINEAR_INDEX_DANGER_PLAYER]
@@ -298,6 +312,9 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     """
     self.logger.debug(f'Encountered event(s) {", ".join(map(repr, events))} in final step')
 
+    
+    append_game_state(last_game_state, self.visited_cache)
+
     agent_data = last_game_state['self']
     score = agent_data[1]
 
@@ -315,7 +332,6 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.request_termination = False
     self.is_loop = False
     self.loop_detector.reset()
-    self.feature_cache.reset()
     self.turn_index = -1
     
 def reward_from_events(self, events: List[str], event_values: List[float]) -> int:
@@ -412,13 +428,13 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
 
     #contrary to the paper, for now, we re-calculate phi_t for better readability.
     #--> changed, we use cache now
-    features_old = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
+    features_old = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     
     #region PAPER: Algorithm 1 Line 14
     '''Quote:   preprocess phi_{t+1} = phi(s_{t+1})'''
     features_new = 0.0
     if not termination_flag:
-        features_new = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
+        features_new = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     #endregion
 
     #check if the game state and action pairing is identical to one of the last game states

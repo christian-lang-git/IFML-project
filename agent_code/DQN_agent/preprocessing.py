@@ -6,9 +6,12 @@ from .dqn import *
 from .bomberman import *
 from ._parameters import HYPER_PARAMETERS_PROCESSING
 from .additional_definitions import *
+from .cache import *
 
 CRATE_DISTANCE_DISCOUNT_FACTOR = HYPER_PARAMETERS_PROCESSING["CRATE_DISTANCE_DISCOUNT_FACTOR"]
 COIN_DISTANCE_DISCOUNT_FACTOR = HYPER_PARAMETERS_PROCESSING["COIN_DISTANCE_DISCOUNT_FACTOR"]
+VISITED_GAIN = HYPER_PARAMETERS_PROCESSING["VISITED_GAIN"]
+VISITED_MAX = HYPER_PARAMETERS_PROCESSING["VISITED_MAX"]
 
 PRE_INDEX_PLAYERS = 0
 PRE_INDEX_COIN_VALUES = 1
@@ -18,23 +21,40 @@ PRE_INDEX_SAFETY_TIME_FIELD = 4
 PRE_INDEX_FIELD = 5
 PRE_INDEX_CRATE_POTENTIAL_SCALED = 6
 PRE_INDEX_CRATE_VALUE = 7
+PRE_INDEX_VISITED_PENALTY = 9
 
 LINEAR_INDEX_BOMB_STATUS = 0
 LINEAR_INDEX_COIN_VALUE_PLAYER = 1
 LINEAR_INDEX_CRATE_VALUE_PLAYER = 6
 LINEAR_INDEX_CRATE_POTENTIAL_PLAYER = 11
 LINEAR_INDEX_DANGER_PLAYER = 16
+LINEAR_INDEX_VISITED_PENALTY_PLAYER = 21
 
 LINEAR_LIST_PLAYER_INDICES = [
     LINEAR_INDEX_COIN_VALUE_PLAYER, 
     LINEAR_INDEX_CRATE_VALUE_PLAYER,
     LINEAR_INDEX_CRATE_POTENTIAL_PLAYER,
-    LINEAR_INDEX_DANGER_PLAYER
+    LINEAR_INDEX_DANGER_PLAYER,
+    LINEAR_INDEX_VISITED_PENALTY_PLAYER
     ]
+
+def append_game_state(game_state: dict, visited_cache):
+    step = game_state["step"]
+    player_coords = game_state["self"][3]
+    has_data, visited = visited_cache.get_data("visited_cache", step)
+    if not has_data:
+        has_data, visited = visited_cache.get_data("visited_cache", step-1)
+        if not has_data:
+            visited = np.zeros_like(game_state["field"], dtype=np.float32)
+        visited[player_coords] += VISITED_GAIN
+        visited[player_coords] = min(VISITED_MAX, visited[player_coords])
+        visited_cache.set_data("visited_cache", step, visited)
+    game_state["visited"] = visited
 
 def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array:
     #region extract game state
     field = game_state['field']
+    visited = game_state["visited"]
     explosion_map = game_state['explosion_map']
     agent_data = game_state['self']
     bombs = game_state['bombs']
@@ -83,9 +103,12 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
     bomb_time_field, bomb_set = preprocess_bomb_time_field(field=field, bombs=bombs)
     safety_time_field = preprocess_safety_time_field(field=field, bombs=bombs, bomb_time_field=bomb_time_field, bomb_set=bomb_set)
     danger_repulsor = preprocess_danger_repulsor(field=field, explosion_map=explosion_map, bombs=bombs, bomb_time_field=bomb_time_field, bomb_set=bomb_set, safety_time_field=safety_time_field)
-    
+    visited_penalty = -visited
+    visited_penalty[field < 0] = -1
+    visited_penalty[field > 0] = -1
+
     #print("preprocess")
-    preprocessing_result = np.stack((players, coin_attractor, danger_repulsor, bomb_time_field, safety_time_field, field, crate_potential_scaled, crate_value))
+    preprocessing_result = np.stack((players, coin_attractor, danger_repulsor, bomb_time_field, safety_time_field, field, crate_potential_scaled, crate_value, visited, visited_penalty))
     if plot:
         store_preprocessing_result(preprocessing_result)
 
@@ -535,6 +558,7 @@ def store_preprocessing_result(preprocessing_result):
 
 def process(game_state: dict, preprocessing_result, process_type) -> np.array:
     switch = {
+        PROCESS_LINEAR_FULL: process_linear_full,
         PROCESS_LINEAR: process_linear,
         PROCESS_LINEAR_SMALL: process_linear_small,
         PROCESS_CONVOLUTION: process_convolution,
@@ -542,6 +566,85 @@ def process(game_state: dict, preprocessing_result, process_type) -> np.array:
     func = switch.get(process_type, "invalid_function")
     #print("process: ", process_type, func)
     return func(game_state, preprocessing_result)
+
+def process_linear_full(game_state: dict, preprocessing_result) -> np.array:
+    #print("process_linear")
+    #print("A")
+    #extract agent data
+    agent_data = game_state['self']
+    agent_coords = agent_data[3]
+    a_x = agent_coords[0]
+    a_y = agent_coords[1]
+    bomb_status = agent_data[2]
+
+    coords_left = (agent_coords[0]-1, agent_coords[1])
+    coords_right = (agent_coords[0]+1, agent_coords[1])
+    coords_up = (agent_coords[0], agent_coords[1]-1)
+    coords_down = (agent_coords[0], agent_coords[1]+1)
+
+    coin_values = preprocessing_result[PRE_INDEX_COIN_VALUES]
+    coin_value_player = coin_values[agent_coords]
+    coin_value_left = coin_values[coords_left]
+    coin_value_right = coin_values[coords_right]
+    coin_value_up = coin_values[coords_up]
+    coin_value_down = coin_values[coords_down]
+
+    crate_values = preprocessing_result[PRE_INDEX_CRATE_VALUE]
+    crate_value_player = crate_values[agent_coords]
+    crate_value_left = crate_values[coords_left]
+    crate_value_right = crate_values[coords_right]
+    crate_value_up = crate_values[coords_up]
+    crate_value_down = crate_values[coords_down]
+
+    crate_potentials = preprocessing_result[PRE_INDEX_CRATE_POTENTIAL_SCALED]
+    crate_potential_player = crate_potentials[agent_coords]
+    crate_potential_left = crate_potentials[coords_left]
+    crate_potential_right = crate_potentials[coords_right]
+    crate_potential_up = crate_potentials[coords_up]
+    crate_potential_down = crate_potentials[coords_down]
+
+    danger_values = preprocessing_result[PRE_INDEX_DANGER_REPULSOR]
+    danger_value_player = danger_values[agent_coords]
+    danger_value_left = danger_values[coords_left]
+    danger_value_right = danger_values[coords_right]
+    danger_value_up = danger_values[coords_up]
+    danger_value_down = danger_values[coords_down]
+
+    visited_penalties = preprocessing_result[PRE_INDEX_VISITED_PENALTY]
+    visited_penalty_player = visited_penalties[agent_coords]
+    visited_penalty_left = visited_penalties[coords_left]
+    visited_penalty_right = visited_penalties[coords_right]
+    visited_penalty_up = visited_penalties[coords_up]
+    visited_penalty_down = visited_penalties[coords_down]
+
+    return np.array([
+        bomb_status,
+        coin_value_player, 
+        coin_value_left, 
+        coin_value_right, 
+        coin_value_up, 
+        coin_value_down,
+        crate_value_player,
+        crate_value_left,
+        crate_value_right,
+        crate_value_up,
+        crate_value_down,
+        crate_potential_player,
+        crate_potential_left,
+        crate_potential_right,
+        crate_potential_up,
+        crate_potential_down,
+        danger_value_player,
+        danger_value_left,
+        danger_value_right,
+        danger_value_up,
+        danger_value_down,
+        visited_penalty_player,
+        visited_penalty_left,
+        visited_penalty_right,
+        visited_penalty_up,
+        visited_penalty_down,
+        ])
 
 def process_linear(game_state: dict, preprocessing_result) -> np.array:
     #print("process_linear")

@@ -97,7 +97,8 @@ def setup(self):
     #endregion
 
     self.processing_cache = {}
-    self.feature_cache = Cache()
+    self.feature_cache = Cache("feature_cache")
+    self.visited_cache = Cache("visited_cache")
     self.is_loop = False
     self.last_action_random = False
     self.turn_index = -1
@@ -114,8 +115,12 @@ def act(self, game_state: dict) -> str:
     step = game_state["step"]
     if step == 1:
         self.processing_cache = {}
+        self.feature_cache.reset()
+        self.visited_cache.reset()
 
     self.turn_index += 1
+
+    append_game_state(game_state, self.visited_cache)
 
     #region loop solution
     #self.is_loop is only set during training
@@ -141,7 +146,7 @@ def act(self, game_state: dict) -> str:
     #Exploitation
     self.logger.debug("Querying model for action.")
     self.last_action_random = False
-    features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=game_state, feature_cache=self.feature_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
+    features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     #reshape the features to create a batch of size 1
     features = features.reshape(1, *features.shape)
     feature_tensor = T.tensor(features, dtype=T.float32, device=self.device)
@@ -152,7 +157,7 @@ def act(self, game_state: dict) -> str:
     return action
     #endregion
 
-def state_to_features_cache_wrapper(turn_index, game_state: dict, feature_cache, processing_cache: dict, process_type, plot_preprocessing) -> np.array:
+def state_to_features_cache_wrapper(turn_index, game_state: dict, feature_cache, visited_cache, processing_cache: dict, process_type, plot_preprocessing) -> np.array:
     has_data, data = feature_cache.get_data(process_type, turn_index)
     if has_data:
         return data
