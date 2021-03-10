@@ -562,6 +562,7 @@ def process(game_state: dict, preprocessing_result, process_type) -> np.array:
         PROCESS_LINEAR: process_linear,
         PROCESS_LINEAR_SMALL: process_linear_small,
         PROCESS_CONVOLUTION: process_convolution,
+        PROCESS_CONVOLUTION_RAW: process_convolution_raw,
     }
     func = switch.get(process_type, "invalid_function")
     #print("process: ", process_type, func)
@@ -753,3 +754,46 @@ def process_convolution(game_state: dict, preprocessing_result) -> np.array:
         preprocessing_result[PRE_INDEX_DANGER_REPULSOR],
         preprocessing_result[PRE_INDEX_VISITED_PENALTY],
         ))
+
+def process_convolution_raw(game_state: dict, preprocessing_result) -> np.array:
+    #region extract game state
+    field = game_state['field']
+    visited = game_state["visited"]
+    explosion_map = game_state['explosion_map']
+    agent_data = game_state['self']
+    bombs = game_state['bombs']
+    coins = game_state['coins']
+    enemies = game_state['others']
+    a_x = agent_data[3][0]
+    a_y = agent_data[3][1]
+    bomb_ready = 1 if agent_data[2] else 0
+    #endregion
+
+    #region generate arrays to store the features
+    players = np.zeros_like(field, dtype=np.float32)
+    f_bombs = -1 * np.ones_like(field, dtype=np.float32)
+    f_coins = -1 * np.ones_like(field, dtype=np.float32)
+    #endregion
+
+    #region process data and write into arrays
+    #player position
+    players[a_x, a_y] = 1
+    #enemy positions
+    for enemy in enemies:
+        e_x = enemy[3][0]
+        e_y = enemy[3][1]
+        players[e_x, e_y] = -1
+        pass
+
+    for bomb in bombs:
+        b_x = bomb[0][0]
+        b_y = bomb[0][1]
+        f_bombs[b_x,b_y] = bomb[1]
+
+    for coin in coins:
+        c_x = coin[0]
+        c_y = coin[1]
+        f_coins[c_x,c_y] = 1
+    #endregion
+        
+    return np.stack((field, players, explosion_map, f_bombs, f_coins))

@@ -117,7 +117,7 @@ class DQN_C1L2(DQN):
         self.dim_layer_full_1 = model_architecture["dim_layer_full_1"]
         self.dim_layer_full_2 = model_architecture["dim_layer_full_2"]
         #setup layers
-        channels = 6
+        channels = self.dim_input[0]
         self.layer_conv_1 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=5, stride=1)#17x17 --> 13x13
         self.layer_full_1 = nn.Linear(channels*13*13, self.dim_layer_full_1)
         self.layer_full_2 = nn.Linear(self.dim_layer_full_1, self.dim_layer_full_2)
@@ -146,7 +146,7 @@ class DQN_C3L1(DQN):
         #store parameters
         self.dim_layer_full_1 = model_architecture["dim_layer_full_1"]
         #setup layers
-        channels = 6
+        channels = self.dim_input[0]
         self.layer_conv_1 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=5, stride=1)#17x17 --> 13x13
         self.layer_conv_2 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=3, stride=1)#13x13 --> 11x11
         self.layer_conv_3 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=3, stride=1)#13x13 --> 9x9
@@ -180,7 +180,7 @@ class DQN_C3L2(DQN):
         self.dim_layer_full_1 = model_architecture["dim_layer_full_1"]
         self.dim_layer_full_2 = model_architecture["dim_layer_full_2"]
         #setup layers
-        channels = 6
+        channels = self.dim_input[0]
         self.layer_conv_1 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=5, stride=1)#17x17 --> 13x13
         self.layer_conv_2 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=3, stride=1)#13x13 --> 11x11
         self.layer_conv_3 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=3, stride=1)#13x13 --> 9x9

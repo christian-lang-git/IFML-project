@@ -161,7 +161,12 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
     append_game_state(new_game_state, self.visited_cache)
 
     event_values=[None] * len(events)
-    insert_events(self, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, events=events, event_values=event_values)
+
+    #when in raw mode, no preprocessing is done and the preprocessing based auxiliary events are skipped
+    process_type=MODEL_ARCHITECTURE["process_type"]
+    if process_type != PROCESS_CONVOLUTION_RAW:
+        insert_events(self, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, events=events, event_values=event_values)
+    
     update_round_train_or_validate(self, events=events, event_values=event_values, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, termination_flag=False)
 
 def insert_events(self, old_game_state: dict, self_action: str, new_game_state: dict, events: List[str], event_values: List[float]):

@@ -176,6 +176,10 @@ def state_to_features(game_state: dict, processing_cache: dict, process_type, pl
     # This is the dict before the game begins and after it ends
     if game_state is None:
         return None
+
+    #special case for raw - no preprocessing is required
+    if process_type == PROCESS_CONVOLUTION_RAW:
+        return process(game_state=game_state, preprocessing_result=None, process_type=process_type)
     
     #preprocess independent of which features we actually want to use
     preprocessing_result = preprocess(game_state=game_state, plot=plot_preprocessing, processing_cache=processing_cache)

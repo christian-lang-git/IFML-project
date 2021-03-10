@@ -5,9 +5,9 @@
     "DEBUG_TRAINING_RESULT": false,
     "MODEL_ARCHITECTURE": {
       "model_type": "DQN_TYPE_C1L2",
-      "process_type": "PROCESS_CONVOLUTION",
+      "process_type": "PROCESS_CONVOLUTION_RAW",
       "dim_input": [
-        6,
+        5,
         17,
         17
       ],

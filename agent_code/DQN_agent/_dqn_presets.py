@@ -43,6 +43,14 @@ MODEL_ARCHITECTURE_DQN_TYPE_C1L2 = {
     "dim_layer_full_1": 128,
     "dim_layer_full_2": 128,
 }
+MODEL_ARCHITECTURE_DQN_TYPE_C1L2_RAW = {
+    "model_type": DQN_TYPE_C1L2,
+    "process_type": PROCESS_CONVOLUTION_RAW,
+    "dim_input": [5, 17, 17],
+    "dim_output": NUM_ACTIONS,
+    "dim_layer_full_1": 128,
+    "dim_layer_full_2": 128,
+}
 MODEL_ARCHITECTURE_DQN_TYPE_C3L1 = {
     "model_type": DQN_TYPE_C3L1,
     "process_type": PROCESS_CONVOLUTION,
