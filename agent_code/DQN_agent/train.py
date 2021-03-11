@@ -190,7 +190,7 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
         towards_event=E_MOVED_TOWARDS_CRATE,
         away_event=E_MOVED_AWAY_FROM_CRATE)
 
-    #check if bomb was dropped near crate
+    #check if bomb was dropped near crate / player
     for event in events:
         if event == e.BOMB_DROPPED:
             potential = old_features[LINEAR_INDEX_CRATE_POTENTIAL_PLAYER]
@@ -199,9 +199,11 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
                 events.append(E_DROPPED_BOMB_NEAR_CRATE)
                 event_values.append(value)
             else:
-                events.append(E_DROPPED_BOMB_BAD)
-                event_values.append(None)
-            #print("dropped bomb value: ", value)
+                sonar = old_features[LINEAR_INDEX_SONAR_PLAYER]
+                if sonar < SONAR_BAD_THRESHOLD:
+                    #if no crate or player is affected it is probably a bad bomb
+                    events.append(E_DROPPED_BOMB_BAD)
+                    event_values.append(None)
             break
 
     #check if certain death

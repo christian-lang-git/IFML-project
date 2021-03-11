@@ -12,6 +12,8 @@ CRATE_DISTANCE_DISCOUNT_FACTOR = HYPER_PARAMETERS_PROCESSING["CRATE_DISTANCE_DIS
 COIN_DISTANCE_DISCOUNT_FACTOR = HYPER_PARAMETERS_PROCESSING["COIN_DISTANCE_DISCOUNT_FACTOR"]
 VISITED_GAIN = HYPER_PARAMETERS_PROCESSING["VISITED_GAIN"]
 VISITED_MAX = HYPER_PARAMETERS_PROCESSING["VISITED_MAX"]
+SONAR_RANGE = HYPER_PARAMETERS_PROCESSING["SONAR_RANGE"]
+SONAR_BAD_THRESHOLD = HYPER_PARAMETERS_PROCESSING["SONAR_BAD_THRESHOLD"]
 
 PRE_INDEX_PLAYERS = 0
 PRE_INDEX_COIN_VALUES = 1
@@ -22,6 +24,7 @@ PRE_INDEX_FIELD = 5
 PRE_INDEX_CRATE_POTENTIAL_SCALED = 6
 PRE_INDEX_CRATE_VALUE = 7
 PRE_INDEX_VISITED_PENALTY = 9
+PRE_INDEX_SONAR = 10
 
 LINEAR_INDEX_BOMB_STATUS = 0
 LINEAR_INDEX_COIN_VALUE_PLAYER = 1
@@ -29,13 +32,15 @@ LINEAR_INDEX_CRATE_VALUE_PLAYER = 6
 LINEAR_INDEX_CRATE_POTENTIAL_PLAYER = 11
 LINEAR_INDEX_DANGER_PLAYER = 16
 LINEAR_INDEX_VISITED_PENALTY_PLAYER = 21
+LINEAR_INDEX_SONAR_PLAYER = 26
 
 LINEAR_LIST_PLAYER_INDICES = [
     LINEAR_INDEX_COIN_VALUE_PLAYER, 
     LINEAR_INDEX_CRATE_VALUE_PLAYER,
     LINEAR_INDEX_CRATE_POTENTIAL_PLAYER,
     LINEAR_INDEX_DANGER_PLAYER,
-    LINEAR_INDEX_VISITED_PENALTY_PLAYER
+    LINEAR_INDEX_VISITED_PENALTY_PLAYER,
+    LINEAR_INDEX_SONAR_PLAYER
     ]
 
 def append_game_state(game_state: dict, visited_cache):
@@ -60,6 +65,7 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
     bombs = game_state['bombs']
     coins = game_state['coins']
     enemies = game_state['others']
+    agent_coords = agent_data[3]
     a_x = agent_data[3][0]
     a_y = agent_data[3][1]
     bomb_ready = 1 if agent_data[2] else 0
@@ -106,9 +112,13 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
     visited_penalty = -visited
     visited_penalty[field < 0] = -1
     visited_penalty[field > 0] = -1
+    sonar = preprocess_sonar(field=field, players=players, agent_coords=agent_coords)
 
     #print("preprocess")
-    preprocessing_result = np.stack((players, coin_attractor, danger_repulsor, bomb_time_field, safety_time_field, field, crate_potential_scaled, crate_value, visited, visited_penalty))
+    preprocessing_result = np.stack((
+        players, coin_attractor, danger_repulsor, bomb_time_field, 
+        safety_time_field, field, crate_potential_scaled, crate_value,
+        visited, visited_penalty, sonar))
     if plot:
         store_preprocessing_result(preprocessing_result)
 
@@ -545,6 +555,98 @@ def preprocess_crate_value(field, crate_potential):
     #crate_value[coord_array] = 1
     return crate_value
 
+"""
+Calculates inverse distance to the nearest enemy in the 4 cardinal directions
+"""
+def preprocess_sonar(field, players, agent_coords):   
+    x_size = field.shape[0]  
+    y_size = field.shape[1]
+
+    sonar = np.zeros_like(field, dtype=np.float32)
+
+    coords_left = (agent_coords[0]-1, agent_coords[1])
+    coords_right = (agent_coords[0]+1, agent_coords[1])
+    coords_up = (agent_coords[0], agent_coords[1]-1)
+    coords_down = (agent_coords[0], agent_coords[1]+1)
+
+    x = agent_coords[0]
+    y = agent_coords[1]
+
+    #propagate potential bomb in positive x direction
+    enemy_flag = False
+    for i in range(SONAR_RANGE):
+        s_x = x+i+1
+        c = (s_x, y)
+        if s_x >= x_size:
+            break
+        #check for wall or crate 
+        if field[c] == -1 or field[c] == 1:
+            break
+        #check for enemy
+        if players[c] == -1:
+            enemy_flag = True
+            enemy_dist = i
+            break
+    if enemy_flag:
+        sonar[coords_right] = 0.5 ** enemy_dist
+
+    #propagate potential bomb in negative x direction
+    enemy_flag = False
+    for i in range(SONAR_RANGE):
+        s_x = x-i-1
+        c = (s_x, y)
+        if s_x < 0:
+            break
+        #check for wall or crate 
+        if field[c] == -1 or field[c] == 1:
+            break
+        #check for enemy
+        if players[c] == -1:
+            enemy_flag = True
+            enemy_dist = i
+            break
+    if enemy_flag:
+        sonar[coords_left] = 0.5 ** enemy_dist
+
+    #propagate potential bomb in positive y direction
+    enemy_flag = False
+    for i in range(SONAR_RANGE):
+        s_y = y+i+1
+        c = (x, s_y)
+        if s_y >= y_size:
+            break
+        #check for wall or crate 
+        if field[c] == -1 or field[c] == 1:
+            break
+        #check for enemy
+        if players[c] == -1:
+            enemy_flag = True
+            enemy_dist = i
+            break
+    if enemy_flag:
+        sonar[coords_up] = 0.5 ** enemy_dist
+
+    #propagate potential bomb in negative y direction
+    enemy_flag = False
+    for i in range(SONAR_RANGE):
+        s_y = y-i-1
+        c = (x, s_y)
+        if s_y < 0:
+            break
+        #check for wall or crate 
+        if field[c] == -1 or field[c] == 1:
+            break
+        #check for enemy
+        if players[c] == -1:
+            enemy_flag = True
+            enemy_dist = i
+            break
+    if enemy_flag:
+        sonar[coords_down] = 0.5 ** enemy_dist
+
+    sonar[agent_coords] = max([sonar[coords_left], sonar[coords_right], sonar[coords_up], sonar[coords_down]])
+    return sonar
+
 
 """
 Check if the tile is free (no crate or wall)
@@ -618,6 +720,13 @@ def process_linear_full(game_state: dict, preprocessing_result) -> np.array:
     visited_penalty_up = visited_penalties[coords_up]
     visited_penalty_down = visited_penalties[coords_down]
 
+    sonar = preprocessing_result[PRE_INDEX_SONAR]
+    sonar_player = sonar[agent_coords]
+    sonar_left = sonar[coords_left]
+    sonar_right = sonar[coords_right]
+    sonar_up = sonar[coords_up]
+    sonar_down = sonar[coords_down]
+
     return np.array([
         bomb_status,
         coin_value_player, 
@@ -645,6 +754,11 @@ def process_linear_full(game_state: dict, preprocessing_result) -> np.array:
         visited_penalty_right,
         visited_penalty_up,
         visited_penalty_down,
+        sonar_player,
+        sonar_left,
+        sonar_right,
+        sonar_up,
+        sonar_down
         ])
 
 def process_linear(game_state: dict, preprocessing_result) -> np.array:

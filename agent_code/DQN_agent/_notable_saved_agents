@@ -5,3 +5,6 @@ after changing fields:
 
 after adding visited penalty - task 2: good
 2021_03_10-00_37-DQN_TYPE_L2_FULL-task_2-good agent_25
+
+after adding sonar, playing against 3 rule_based
+2021_03_10-20_32-DQN_TYPE_L2_FULL-VS-3_rule - task 3: ok

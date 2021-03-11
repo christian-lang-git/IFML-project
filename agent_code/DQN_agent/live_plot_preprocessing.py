@@ -14,6 +14,7 @@ PRE_INDEX_CRATE_POTENTIAL_SCALED = 6
 PRE_INDEX_CRATE_VALUE = 7
 PRE_INDEX_VISITED = 8
 PRE_INDEX_VISITED_PENALTY = 9
+PRE_INDEX_SONAR = 10
 
 rows = 3
 cols = 4
@@ -33,23 +34,22 @@ def update_plot(data, fig):
     fig.colorbar(img, ax=ax)
 
     ax = fig.add_subplot(rows,cols,2)
+    ax.set(title="sonar")
+    img = plt.imshow(data[PRE_INDEX_SONAR].T, interpolation = 'nearest')
+    plt.clim(vmin=-1, vmax=1)
+    fig.colorbar(img, ax=ax)
+
+    ax = fig.add_subplot(rows,cols,3)
     ax.set(title="coin value")
     img = plt.imshow(data[PRE_INDEX_COIN_VALUES].T, interpolation = 'nearest')
     plt.clim(vmin=-0.1, vmax=1)
     fig.colorbar(img, ax=ax)
 
-    ax = fig.add_subplot(rows,cols,3)
+    ax = fig.add_subplot(rows,cols,4)
     ax.set(title="visited penalty")
     img = plt.imshow(data[PRE_INDEX_VISITED_PENALTY].T, interpolation = 'nearest')
     plt.clim(vmin=-1, vmax=1)
     fig.colorbar(img, ax=ax)
-
-    ax = fig.add_subplot(rows,cols,4)
-    ax.set(title="visited")
-    img = plt.imshow(data[PRE_INDEX_VISITED].T, interpolation = 'nearest')
-    plt.clim(vmin=-0.1, vmax=1)
-    fig.colorbar(img, ax=ax)
-
 
     #row 2
     ax = fig.add_subplot(rows,cols,5)
@@ -70,7 +70,11 @@ def update_plot(data, fig):
     plt.clim(vmin=-0.1, vmax=1)
     fig.colorbar(img, ax=ax) 
 
-
+    ax = fig.add_subplot(rows,cols,8)
+    ax.set(title="visited")
+    img = plt.imshow(data[PRE_INDEX_VISITED].T, interpolation = 'nearest')
+    plt.clim(vmin=-0.1, vmax=1)
+    fig.colorbar(img, ax=ax)
 
     #row 3
     ax = fig.add_subplot(rows,cols,9)
