@@ -291,7 +291,7 @@ def preprocess_bomb_time_field(field, bombs):
         for i in range(BOMB_RANGE):
             e_x = b_x+i
             c = (e_x, b_y)
-            if e_x >= x_size:
+            if e_x >= x_size:#unnecessary check if field is bound by walls
                 break
             if field[c] == -1:
                 break
@@ -307,7 +307,7 @@ def preprocess_bomb_time_field(field, bombs):
         for i in range(BOMB_RANGE):
             e_x = b_x-i
             c = (e_x, b_y)
-            if e_x < 0:
+            if e_x < 0:#unnecessary check if field is bound by walls
                 break
             if field[c] == -1:
                 break
@@ -323,7 +323,7 @@ def preprocess_bomb_time_field(field, bombs):
         for i in range(BOMB_RANGE):
             e_y = b_y+i
             c = (b_x, e_y)
-            if e_y >= y_size:
+            if e_y >= y_size:#unnecessary check if field is bound by walls
                 break
             if field[c] == -1:
                 break
@@ -339,7 +339,7 @@ def preprocess_bomb_time_field(field, bombs):
         for i in range(BOMB_RANGE):
             e_y = b_y-i
             c = (b_x, e_y)
-            if e_y >= y_size:
+            if e_y < 0:#unnecessary check if field is bound by walls
                 break
             if field[c] == -1:
                 break
@@ -443,7 +443,7 @@ def preprocess_crate_potential(field):
             for i in range(BOMB_RANGE):
                 e_x = x+i
                 c = (e_x, y)
-                if e_x >= x_size:
+                if e_x >= x_size:#unnecessary check if field is bound by walls
                     break
                 if field[c] == -1:
                     break
@@ -454,7 +454,7 @@ def preprocess_crate_potential(field):
             for i in range(BOMB_RANGE):
                 e_x = x-i
                 c = (e_x, y)
-                if e_x >= x_size:
+                if e_x < 0:#unnecessary check if field is bound by walls
                     break
                 if field[c] == -1:
                     break
@@ -465,7 +465,7 @@ def preprocess_crate_potential(field):
             for i in range(BOMB_RANGE):
                 e_y = y+i
                 c = (x, e_y)
-                if e_y >= y_size:
+                if e_y >= y_size:#unnecessary check if field is bound by walls
                     break
                 if field[c] == -1:
                     break
@@ -476,7 +476,7 @@ def preprocess_crate_potential(field):
             for i in range(BOMB_RANGE):
                 e_y = y-i
                 c = (x, e_y)
-                if e_y >= y_size:
+                if e_y < 0:#unnecessary check if field is bound by walls
                     break
                 if field[c] == -1:
                     break
@@ -577,7 +577,7 @@ def preprocess_sonar(field, players, agent_coords):
     for i in range(SONAR_RANGE):
         s_x = x+i+1
         c = (s_x, y)
-        if s_x >= x_size:
+        if s_x >= x_size:#unnecessary check if field is bound by walls
             break
         #check for wall or crate 
         if field[c] == -1 or field[c] == 1:
@@ -595,7 +595,7 @@ def preprocess_sonar(field, players, agent_coords):
     for i in range(SONAR_RANGE):
         s_x = x-i-1
         c = (s_x, y)
-        if s_x < 0:
+        if s_x < 0:#unnecessary check if field is bound by walls
             break
         #check for wall or crate 
         if field[c] == -1 or field[c] == 1:
@@ -613,7 +613,7 @@ def preprocess_sonar(field, players, agent_coords):
     for i in range(SONAR_RANGE):
         s_y = y+i+1
         c = (x, s_y)
-        if s_y >= y_size:
+        if s_y >= y_size:#unnecessary check if field is bound by walls
             break
         #check for wall or crate 
         if field[c] == -1 or field[c] == 1:
@@ -631,7 +631,7 @@ def preprocess_sonar(field, players, agent_coords):
     for i in range(SONAR_RANGE):
         s_y = y-i-1
         c = (x, s_y)
-        if s_y < 0:
+        if s_y < 0:#unnecessary check if field is bound by walls
             break
         #check for wall or crate 
         if field[c] == -1 or field[c] == 1:
