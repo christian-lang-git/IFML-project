@@ -2,7 +2,7 @@
   "HYPER_PARAMETERS": {
     "USE_CUDA": true,
     "PLOT_PREPROCESSING": true,
-    "DEBUG_TRAINING_RESULT": false,
+    "DEBUG_TRAINING_RESULT": true,
     "MODEL_ARCHITECTURE": {
       "model_type": "DQN_TYPE_L2",
       "process_type": "PROCESS_LINEAR_FULL",

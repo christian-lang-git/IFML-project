@@ -624,7 +624,7 @@ def preprocess_sonar(field, players, agent_coords):
             enemy_dist = i
             break
     if enemy_flag:
-        sonar[coords_up] = 0.5 ** enemy_dist
+        sonar[coords_down] = 0.5 ** enemy_dist
 
     #propagate potential bomb in negative y direction
     enemy_flag = False
@@ -642,7 +642,7 @@ def preprocess_sonar(field, players, agent_coords):
             enemy_dist = i
             break
     if enemy_flag:
-        sonar[coords_down] = 0.5 ** enemy_dist
+        sonar[coords_up] = 0.5 ** enemy_dist
 
     sonar[agent_coords] = max([sonar[coords_left], sonar[coords_right], sonar[coords_up], sonar[coords_down]])
     return sonar

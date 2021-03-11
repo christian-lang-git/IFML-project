@@ -5,7 +5,7 @@ from ._dqn_presets import *
 HYPER_PARAMETERS = {
     "USE_CUDA": True,
     "PLOT_PREPROCESSING": True,
-    "DEBUG_TRAINING_RESULT": False,
+    "DEBUG_TRAINING_RESULT": True,
     "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_DQN_TYPE_L2_FULL,
 }
 
