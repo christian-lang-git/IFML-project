@@ -437,7 +437,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
     #--> changed, we use cache now
     features_old = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     
-    #region PAPER: Algorithm 1 Line 14
+    #region PAPER: Algorithm 1 Line 13
     '''Quote:   preprocess phi_{t+1} = phi(s_{t+1})'''
     features_new = 0.0
     if not termination_flag:
@@ -454,7 +454,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
     #agent_position = agent_data[3]
     #self.is_loop = self.loop_detector.store(agent_position, action_index) > LOOP_THRESHOLD
 
-    #region PAPER: Algorithm 1 Line 15
+    #region PAPER: Algorithm 1 Line 14
     '''Quote:   Store transition (phi_t, a_t, r_t, phi_{t+1}) in D'''
     self.replay_buffer.store(old_state=features_old, action_index=action_index, reward=reward, new_state=features_new, termination_flag=termination_flag)
     #endregion
@@ -464,7 +464,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
     number_of_batches = 8 if EXPLOIT_SYMMETRY else 1
     for i in range(number_of_batches):
 
-        #region PAPER: Algorithm 1 Line 16
+        #region PAPER: Algorithm 1 Line 15
         '''Quote:   Sample random minibatch of transitions (phi_j, a_j, r_j, phi_{j+1})'''
         #try to sample a batch, returns None while BATCH_SIZE is not reached yet
         batch_old_state, batch_action_index, batch_reward, batch_new_state, batch_termination_flag = self.replay_buffer.sample(BATCH_SIZE)
@@ -472,7 +472,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
             return
         #endregion
 
-        #region PAPER: Algorithm 1 Line 17
+        #region PAPER: Algorithm 1 Line 16
         '''Quote:   Set y_j =   r_j     if episode terminates at step j+1
                                 r_j + gamma max_{a'} Q_hat(phi_{j+1}, a', theta^{minus})    otherwise'''
         #calculate q_hat for all transitions of the batch. (this is the 'otherwise' case from the quote.)
@@ -485,7 +485,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
         #print(T.max(_q_hat, dim=1)[0])
         #endregion
 
-        #region PAPER: Algorithm 1 Line 18
+        #region PAPER: Algorithm 1 Line 17
         '''Quote:   Perform a gradient descent step on (y_j -Q(phi_j, a_j, theta))^2 
                     with respect to the network parameters theta'''
         #zero the gradient (required since loss.backward() changes the gradient and
@@ -504,7 +504,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
         self.optimizer.step()
         #endregion
 
-        #region PAPER: Algorithm 1 Line 19
+        #region PAPER: Algorithm 1 Line 18
         '''Quote:   Every C steps reset Q_hat = Q'''
         if self.target_step_count >= TARGET_STEPS:
             self.target_step_count = 0

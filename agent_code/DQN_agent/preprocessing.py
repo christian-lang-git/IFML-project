@@ -107,8 +107,8 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
     coin_attractor, crate_potential_scaled, crate_value = preprocess_coin_and_crates(field=field, coins=coins, processing_cache=processing_cache)
 
     bomb_time_field, bomb_set = preprocess_bomb_time_field(field=field, bombs=bombs)
-    safety_time_field = preprocess_safety_time_field(field=field, bombs=bombs, bomb_time_field=bomb_time_field, bomb_set=bomb_set)
-    danger_repulsor = preprocess_danger_repulsor(field=field, explosion_map=explosion_map, bombs=bombs, bomb_time_field=bomb_time_field, bomb_set=bomb_set, safety_time_field=safety_time_field)
+    safety_time_field = preprocess_safety_time_field(field=field, players=players, f_bombs=f_bombs, bomb_time_field=bomb_time_field, bomb_set=bomb_set)
+    danger_repulsor = preprocess_danger_repulsor(agent_coords=agent_coords, field=field, explosion_map=explosion_map, bombs=bombs, enemies=enemies, bomb_time_field=bomb_time_field, bomb_set=bomb_set, safety_time_field=safety_time_field)
     visited_penalty = -visited
     visited_penalty[field < 0] = -1
     visited_penalty[field > 0] = -1
@@ -252,8 +252,9 @@ def preprocess_coin_attractor(field, coins, processing_cache):
 
 """
 Calculates the danger value of each tile (no wall)
+Bomb and enemy tiles are set to max value
 """
-def preprocess_danger_repulsor(field, explosion_map, bombs, bomb_time_field, bomb_set, safety_time_field):   
+def preprocess_danger_repulsor(agent_coords, field, explosion_map, bombs, enemies, bomb_time_field, bomb_set, safety_time_field):   
     danger_repulsor =  np.zeros_like(field, dtype=np.float32)
     for c in bomb_set:
         #danger_repulsor[c] = safety_time_field[c] - bomb_time_field[c]
@@ -261,6 +262,14 @@ def preprocess_danger_repulsor(field, explosion_map, bombs, bomb_time_field, bom
         #danger_repulsor[c] = np.divide(safety_time_field[c] - bomb_time_field[c], 3)
     
     danger_repulsor = np.clip(danger_repulsor + explosion_map, a_min=0, a_max=1)
+
+    for bomb in bombs:
+        if bomb[0] != agent_coords:
+            danger_repulsor[bomb[0]] = 1
+            
+    for enemy in enemies:
+        danger_repulsor[enemy[3]] = 1
+
     return danger_repulsor
 
 """
@@ -358,7 +367,7 @@ def preprocess_bomb_time_field(field, bombs):
 Calculates the minimum safety time for each tile (no wall)
 (turns required to reach safe tile)
 """
-def preprocess_safety_time_field(field, bombs, bomb_time_field, bomb_set):
+def preprocess_safety_time_field(field, players, f_bombs, bomb_time_field, bomb_set):
     x_size = field.shape[0]  
     y_size = field.shape[1]
 
@@ -372,7 +381,7 @@ def preprocess_safety_time_field(field, bombs, bomb_time_field, bomb_set):
         safety_time_field_new = safety_time_field_2 if i % 2 == 0 else safety_time_field
         safety_time_field_old = safety_time_field if i % 2 == 0 else safety_time_field_2
         for c in bomb_set: 
-            safety_time_field_new[c] = 1 + get_smallest_free_neighbor(field, c, safety_time_field_old)
+            safety_time_field_new[c] = 1 + get_smallest_free_neighbor(field, players, f_bombs, c, safety_time_field_old)
 
     #for c in bomb_set:        
     #    safety_time_field_2[c] = 1 + get_smallest_free_neighbor(field, c, safety_time_field)
@@ -385,20 +394,20 @@ def preprocess_safety_time_field(field, bombs, bomb_time_field, bomb_set):
         
     return safety_time_field_new    
 
-def get_smallest_free_neighbor(field, coords, array):
+def get_smallest_free_neighbor(field, players, f_bombs, coords, array):
     coords_left = (coords[0]-1, coords[1])
     coords_right = (coords[0]+1, coords[1])
     coords_up = (coords[0], coords[1]-1)
     coords_down = (coords[0], coords[1]+1)
 
     free_list = []
-    if check_free_tile(coords_left, field):
+    if check_free_tile_2(coords_left, field, players, f_bombs):
         free_list.append(array[coords_left])
-    if check_free_tile(coords_right, field):
+    if check_free_tile_2(coords_right, field, players, f_bombs):
         free_list.append(array[coords_right])
-    if check_free_tile(coords_up, field):
+    if check_free_tile_2(coords_up, field, players, f_bombs):
         free_list.append(array[coords_up])
-    if check_free_tile(coords_down, field):
+    if check_free_tile_2(coords_down, field, players, f_bombs):
         free_list.append(array[coords_down])
 
     if len(free_list) == 0:
@@ -653,6 +662,15 @@ Check if the tile is free (no crate or wall)
 """
 def check_free_tile(coords, field):
     return field[coords[0], coords[1]] > -0.1 and field[coords[0], coords[1]] < 0.1
+
+"""
+Check if the tile is free (no crate or wall or enemy)
+"""
+def check_free_tile_2(coords, field, players, f_bombs):
+    free_field = field[coords[0], coords[1]] > -0.1 and field[coords[0], coords[1]] < 0.1
+    free_players = players[coords] > -0.1
+    free_bombs = f_bombs[coords] < 0.1
+    return free_field and free_players
 
 def store_preprocessing_result(preprocessing_result):
     with open("preprocessing_results.pt", "wb") as file:
