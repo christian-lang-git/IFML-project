@@ -190,7 +190,8 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
         towards_event=E_MOVED_TOWARDS_CRATE,
         away_event=E_MOVED_AWAY_FROM_CRATE)
 
-    #check if bomb was dropped near crate / player
+    #check if bomb was dropped near crate / enemy
+    good_bomb = False #if no bomb was dropped it was no good bomb
     for event in events:
         if event == e.BOMB_DROPPED:
             potential = old_features[LINEAR_INDEX_CRATE_POTENTIAL_PLAYER]
@@ -198,17 +199,25 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
             if value > 0:
                 events.append(E_DROPPED_BOMB_NEAR_CRATE)
                 event_values.append(value)
+                good_bomb = True #bomb was near crate --> good bomb
             else:
                 sonar = old_features[LINEAR_INDEX_SONAR_PLAYER]
                 if sonar < SONAR_BAD_THRESHOLD:
-                    #if no crate or player is affected it is probably a bad bomb
+                    #if no crate or enemy is affected it is probably a bad bomb
                     events.append(E_DROPPED_BOMB_BAD)
+                    event_values.append(None)
+                if sonar > SONAR_GOOD_THRESHOLD:
+                    good_bomb = True #bomb was near enemy --> good bomb
+                    events.append(E_DROPPED_BOMB_NEAR_ENEMY)
                     event_values.append(None)
             break
 
     #check if certain death
     insert_events_danger_exceeded(self, old_features=old_features, new_features=new_features, events=events, event_values=event_values)
 
+    #visited penalty is skipped if a good bomb was dropped
+    if good_bomb:
+        return
     #insert visited penalty
     #player_coords = new_game_state["self"][3]
     #visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_game_state["visited"][player_coords]

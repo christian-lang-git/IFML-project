@@ -14,6 +14,7 @@ VISITED_GAIN = HYPER_PARAMETERS_PROCESSING["VISITED_GAIN"]
 VISITED_MAX = HYPER_PARAMETERS_PROCESSING["VISITED_MAX"]
 SONAR_RANGE = HYPER_PARAMETERS_PROCESSING["SONAR_RANGE"]
 SONAR_BAD_THRESHOLD = HYPER_PARAMETERS_PROCESSING["SONAR_BAD_THRESHOLD"]
+SONAR_GOOD_THRESHOLD = HYPER_PARAMETERS_PROCESSING["SONAR_GOOD_THRESHOLD"]
 
 PRE_INDEX_PLAYERS = 0
 PRE_INDEX_COIN_VALUES = 1
@@ -266,7 +267,7 @@ def preprocess_danger_repulsor(agent_coords, field, explosion_map, bombs, enemie
     for bomb in bombs:
         if bomb[0] != agent_coords:
             danger_repulsor[bomb[0]] = 1
-            
+
     for enemy in enemies:
         danger_repulsor[enemy[3]] = 1
 
