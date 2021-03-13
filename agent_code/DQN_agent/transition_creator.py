@@ -27,14 +27,6 @@ def generate_8_transitions(old_state, action_index, new_state):
         rot_180_m,
         rot_270_m
     ]
-    #transition_list.append(original)
-    #transition_list.append(rot_90)
-    #transition_list.append(rot_180)
-    #transition_list.append(rot_270)
-    #transition_list.append(original_m)
-    #transition_list.append(rot_90_m)
-    #transition_list.append(rot_180_m)
-    #transition_list.append(rot_270_m)
     return transition_list
 
 def rotate_90_linear(transition):
@@ -76,12 +68,7 @@ def rotate_90_linear_features(features):
     """
     Rotates features for processing type PROCESS_LINEAR counter clockwise.
     """
-    #print(features)
     features_rot = np.copy(features)
-    #try:
-    #    print("features.shape", features.shape)
-    #except:
-    #    print(features)
 
     try:
         for offset in LINEAR_LIST_PLAYER_INDICES:        
@@ -102,14 +89,14 @@ def rotate_90_linear_features(features):
 
 def mirror_linear(transition):
     """
-    Mirrors a transition for processing type PROCESS_LINEAR.
+    Mirrors a transition along the horizontal axis (vertical flip) for processing type PROCESS_LINEAR.
     Reward and termination flag are not included since they are constant for all 8 transitions.
     """
     #extract components of transition
     old_features = transition[0]
     action_index = transition[1]
     new_features = transition[2]
-    #apply rotation to components of transition
+    #apply mirroring to components of transition
     old_features_m = mirror_linear_features(old_features)
     action_index_m = mirror_action(action_index)
     new_features_m = mirror_linear_features(new_features)
@@ -118,14 +105,10 @@ def mirror_linear(transition):
 
 def mirror_action(action_index):
     """
-    Mirrors an action.
+    Mirrors an action along the horizontal axis (vertical flip).
     """
     action = ACTIONS[action_index]
-    if action == ACTION_LEFT:
-        action_m = ACTION_RIGHT
-    elif action == ACTION_RIGHT:
-        action_m = ACTION_LEFT
-    elif action == ACTION_UP:
+    if action == ACTION_UP:
         action_m = ACTION_DOWN
     elif action == ACTION_DOWN:
         action_m = ACTION_UP
@@ -136,17 +119,12 @@ def mirror_action(action_index):
 
 def mirror_linear_features(features):
     """
-    Mirrors features for processing type PROCESS_LINEAR.
-    """
-    
+    Mirrors features along the horizontal axis (vertical flip) for processing type PROCESS_LINEAR.
+    """    
     features_m = np.copy(features)
 
     for offset in LINEAR_LIST_PLAYER_INDICES:        
         #the data in the linear processing is always in the order player=0, left=1, right=2, up=3, down=4
-        #left=1 element stores right=2
-        features_m[offset+1] = features[offset+2]
-        #right=2 element stores left=1
-        features_m[offset+2] = features[offset+1]
         #up=3 element stores down=4
         features_m[offset+3] = features[offset+4]
         #down=4 element stores up=3
