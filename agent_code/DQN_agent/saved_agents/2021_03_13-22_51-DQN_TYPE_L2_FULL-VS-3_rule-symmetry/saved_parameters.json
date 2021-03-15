@@ -15,7 +15,7 @@
     }
   },
   "HYPER_PARAMETERS_TRAIN": {
-    "EXPLOIT_SYMMETRY": false,
+    "EXPLOIT_SYMMETRY": true,
     "USE_8_BATCHES": false,
     "REPLAY_BUFFER_CAPACITY": 250000,
     "BATCH_SIZE": 64,

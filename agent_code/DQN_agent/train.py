@@ -27,6 +27,7 @@ HYPER PARAMETERS
 All hyper parameters are extracted from _parameters.py
 """
 EXPLOIT_SYMMETRY = HYPER_PARAMETERS_TRAIN["EXPLOIT_SYMMETRY"]
+USE_8_BATCHES = HYPER_PARAMETERS_TRAIN["USE_8_BATCHES"]
 REPLAY_BUFFER_CAPACITY = HYPER_PARAMETERS_TRAIN["REPLAY_BUFFER_CAPACITY"]
 BATCH_SIZE = HYPER_PARAMETERS_TRAIN["BATCH_SIZE"]
 EPSILON_START = HYPER_PARAMETERS_TRAIN["EPSILON_START"]
@@ -470,7 +471,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
 
     #since we exploit symmetry, we gain 8 new transitions per iteration of the game.
     #this motivates the use of 8 mini batches per iteration 
-    number_of_batches = 8 if EXPLOIT_SYMMETRY else 1
+    number_of_batches = 8 if (EXPLOIT_SYMMETRY and USE_8_BATCHES) else 1
     for i in range(number_of_batches):
 
         #region PAPER: Algorithm 1 Line 15
