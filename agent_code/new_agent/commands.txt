@@ -1,0 +1,24 @@
+LIVE PLT
+cd /d D:PATH\bomberman_rl\agent_code\new_agent
+conda activate CONDA_NAME
+python live_plot.py
+
+LIVE DEBUGGING
+cd /d D:PATH\bomberman_rl\agent_code\new_agent
+conda activate CONDA_NAME
+python live_plot_preprocessing.py
+
+TRAINING VS 3 RULE BASED
+cd /d D:PATH\bomberman_rl\agent_code\new_agent
+conda activate CONDA_NAME
+python main.py play --agents new_agent rule_based_agent rule_based_agent rule_based_agent --train 1 --n-rounds 100000 --no-gui
+
+TRAINING DEBUGGING
+cd /d D:PATH\bomberman_rl\agent_code\new_agent
+conda activate CONDA_NAME
+python main.py play --agents new_agent --train 1 --turn-based
+
+TEST VS 3 RULE BASED 
+cd /d D:PATH\bomberman_rl\agent_code\new_agent
+conda activate CONDA_NAME
+python main.py play --agents new_agent rule_based_agent rule_based_agent rule_based_agent
