@@ -929,4 +929,5 @@ def process_convolution_raw(game_state: dict, preprocessing_result) -> np.array:
         f_coins[c_x,c_y] = 1
     #endregion
         
-    return np.stack((field, players, explosion_map, f_bombs, f_coins))
+    #return np.stack((field, players, explosion_map, f_bombs, f_coins))
+    return np.stack((field, players, visited, f_bombs, f_coins))

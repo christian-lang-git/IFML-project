@@ -72,10 +72,10 @@ def setup(self):
     #region load agent from file
     if not self.train:
         print("agent not in training mode")
-        self.Q.load("agent.pt")
+        self.Q.load("agent.pt", self.device)
     elif DEBUG_TRAINING_RESULT:
         print("agent loaded despite training mode")
-        self.Q.load("agent.pt")
+        self.Q.load("agent.pt", self.device)
     else:
         print("agent in training mode")
     #endregion

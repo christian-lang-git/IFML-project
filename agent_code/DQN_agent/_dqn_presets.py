@@ -66,3 +66,30 @@ MODEL_ARCHITECTURE_DQN_TYPE_C3L2 = {
     "dim_layer_full_1": 16,
     "dim_layer_full_2": 16,
 }
+
+
+MODEL_ARCHITECTURE_DQN_TYPE_C3L1_RAW = {
+    "model_type": DQN_TYPE_C3L1,
+    "process_type": PROCESS_CONVOLUTION_RAW,
+    "dim_input": [5, 17, 17],
+    "dim_output": NUM_ACTIONS,
+    "conv_1": {
+        "kernel_size": 9,
+        "stride": 1,
+        "channels": 16,
+        "padding": 3
+    },
+    "conv_2": {
+        "kernel_size": 5,
+        "stride": 1,
+        "channels": 32,
+        "padding": 0
+    },
+    "conv_3": {
+        "kernel_size": 3,
+        "stride": 1,
+        "channels": 32,
+        "padding": 0
+    },
+    "dim_layer_full_1": 256,
+}

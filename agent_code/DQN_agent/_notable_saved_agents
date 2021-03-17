@@ -11,3 +11,11 @@ after adding sonar, playing against 3 rule_based
 
 after sonar + danger fix, playing against 3 rule_based
 2021_03_12-03_28-DQN_TYPE_L2_FULL-VS-3_rule-danger_fix - task 3: ok
+
+
+
+CDQN that is clearly learning something
+2021_03_16-15_12-DQN_TYPE_C3L1-raw-lr_00001
+
+after adding visited to CDQN and rebalancing rewards:
+TODO

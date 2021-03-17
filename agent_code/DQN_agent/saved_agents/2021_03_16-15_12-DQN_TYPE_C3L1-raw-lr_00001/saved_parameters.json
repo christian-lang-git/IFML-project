@@ -7,7 +7,7 @@
       "model_type": "DQN_TYPE_C3L1",
       "process_type": "PROCESS_CONVOLUTION_RAW",
       "dim_input": [
-        5,
+        4,
         17,
         17
       ],
@@ -61,13 +61,11 @@
     "SONAR_GOOD_THRESHOLD": 0.9
   },
   "GAME_REWARDS": {
-    "COIN_COLLECTED": 0.1,
-    "KILLED_OPPONENT": 0.5,
-    "CRATE_DESTROYED": 0.01,
-    "GOT_KILLED": -1,
-    "INVALID_ACTION": -0.002
+    "COIN_COLLECTED": 1,
+    "KILLED_OPPONENT": 5,
+    "CRATE_DESTROYED": 0.1,
+    "GOT_KILLED": -5,
+    "INVALID_ACTION": -0.1
   },
-  "GAME_REWARD_FACTORS": {
-    "E_VISITED_PENALTY": 0.02
-  }
+  "GAME_REWARD_FACTORS": {}
 }

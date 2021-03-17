@@ -4,33 +4,14 @@
     "PLOT_PREPROCESSING": true,
     "DEBUG_TRAINING_RESULT": false,
     "MODEL_ARCHITECTURE": {
-      "model_type": "DQN_TYPE_C3L1",
-      "process_type": "PROCESS_CONVOLUTION_RAW",
+      "model_type": "DQN_TYPE_L2",
+      "process_type": "PROCESS_LINEAR_FULL",
       "dim_input": [
-        5,
-        17,
-        17
+        31
       ],
       "dim_output": 6,
-      "conv_1": {
-        "kernel_size": 9,
-        "stride": 1,
-        "channels": 16,
-        "padding": 3
-      },
-      "conv_2": {
-        "kernel_size": 5,
-        "stride": 1,
-        "channels": 32,
-        "padding": 0
-      },
-      "conv_3": {
-        "kernel_size": 3,
-        "stride": 1,
-        "channels": 32,
-        "padding": 0
-      },
-      "dim_layer_full_1": 256
+      "dim_layer_full_1": 128,
+      "dim_layer_full_2": 128
     }
   },
   "HYPER_PARAMETERS_TRAIN": {
@@ -38,7 +19,7 @@
     "USE_8_BATCHES": false,
     "REPLAY_BUFFER_CAPACITY": 250000,
     "BATCH_SIZE": 64,
-    "LEARNING_RATE": 1e-05,
+    "LEARNING_RATE": 0.001,
     "GAMMA": 0.99,
     "TARGET_STEPS": 1000,
     "EPSILON_START": 0.1,
@@ -61,13 +42,19 @@
     "SONAR_GOOD_THRESHOLD": 0.9
   },
   "GAME_REWARDS": {
-    "COIN_COLLECTED": 0.1,
-    "KILLED_OPPONENT": 0.5,
-    "CRATE_DESTROYED": 0.01,
+    "COIN_COLLECTED": 1,
     "GOT_KILLED": -1,
-    "INVALID_ACTION": -0.002
+    "INVALID_ACTION": -0.1,
+    "E_DANGER_EXCEEDED": -5,
+    "E_DROPPED_BOMB_BAD": -0.5,
+    "E_DROPPED_BOMB_NEAR_ENEMY": 0.5
   },
   "GAME_REWARD_FACTORS": {
-    "E_VISITED_PENALTY": 0.02
+    "MOVED_TOWARDS_COIN": 2,
+    "MOVED_AWAY_FROM_COIN": 2.2,
+    "E_MOVED_TOWARDS_CRATE": 1,
+    "E_MOVED_AWAY_FROM_CRATE": 1.1,
+    "E_DROPPED_BOMB_NEAR_CRATE": 1,
+    "E_VISITED_PENALTY": 0.2
   }
 }
