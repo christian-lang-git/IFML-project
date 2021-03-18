@@ -42,6 +42,7 @@ EPOCH_LENGTH_VALIDATION = HYPER_PARAMETERS_TRAIN["EPOCH_LENGTH_VALIDATION"]
 LOOP_THRESHOLD = HYPER_PARAMETERS_TRAIN["LOOP_THRESHOLD"]#if the agent uses the same action at the same position LOOP_THRESHOLD times, a loop is detected
 LOOP_NUM_CHECKS = HYPER_PARAMETERS_TRAIN["LOOP_NUM_CHECKS"]
 SKIP_LOOP = HYPER_PARAMETERS_TRAIN["SKIP_LOOP"]
+INSERT_EVENTS = HYPER_PARAMETERS_TRAIN["INSERT_EVENTS"]
 """
 END OF HYPER PARAMETERS
 """
@@ -162,13 +163,16 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
 
     event_values=[None] * len(events)
 
-    #when in raw mode, no preprocessing is done and the preprocessing based auxiliary events are skipped
-    process_type=MODEL_ARCHITECTURE["process_type"]
-    if process_type != PROCESS_CONVOLUTION_RAW:
+
+    #when in raw mode, no preprocessing is done and the preprocessing based auxiliary events are skipped        
+    if INSERT_EVENTS == EVENTS_ALL:
         insert_events(self, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, events=events, event_values=event_values)
-    else:
+    elif INSERT_EVENTS == EVENTS_RAW:
         insert_events_raw(self, new_game_state=new_game_state, events=events, event_values=event_values)
+
+
     update_round_train_or_validate(self, events=events, event_values=event_values, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, termination_flag=False)
+      
 
 def insert_events_raw(self, new_game_state: dict, events: List[str], event_values):
     agent_coords = new_game_state["self"][3]    
