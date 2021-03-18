@@ -1,14 +1,45 @@
+"""
+INSTALLATION COMMANDS:
+    pip install torch
+FOR CUDA SUPPORT ON GTX 1060:
+    conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -c=conda-forge
+"""
 import os
 import pickle
+import json
 import random
-
 import numpy as np
+import torch as T
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
 
+from random import shuffle#TODO still needed here?
 
-ACTIONS = ['UP', 'RIGHT', 'DOWN', 'LEFT', 'WAIT', 'BOMB']
-FEATURE_SIZE = 626
+from .dqn import *
+from .preprocessing import *
+from .bomberman import *
+from .cache import *
+from ._parameters import HYPER_PARAMETERS
 
+import matplotlib.pyplot as plt #for debugging
 
+"""
+HYPER PARAMETERS
+All hyper parameters are extracted from _parameters.py
+"""
+USE_CUDA = HYPER_PARAMETERS["USE_CUDA"]
+PLOT_PREPROCESSING = HYPER_PARAMETERS["PLOT_PREPROCESSING"]
+DEBUG_TRAINING_RESULT = HYPER_PARAMETERS["DEBUG_TRAINING_RESULT"]
+MODEL_ARCHITECTURE = HYPER_PARAMETERS["MODEL_ARCHITECTURE"]
+"""
+END OF HYPER PARAMETERS
+CALCULATED PARAMETERS
+"""
+#TODO unused
+"""
+END OF CALCULATED PARAMETERS
+"""
 def setup(self):
     """
     Setup your code. This is called once when loading each agent.
@@ -23,15 +54,50 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    if self.train or not os.path.isfile("my-saved-model.pt"):
-        self.logger.info("Setting up model from scratch.")
-        self.model = np.zeros((FEATURE_SIZE,len(ACTIONS)))
-        #self.model = weights / weights.sum()
-    else:
-        self.logger.info("Loading model from saved state.")
-        with open("my-saved-model.pt", "rb") as file:
-            self.model = pickle.load(file)
+    #region CUDA
+    if USE_CUDA and T.cuda.is_available():
+        print("CUDA AVAILABLE")
+        self.device = T.device("cuda")
+    else:                
+        print("CUDA NOT AVAILABLE OR DISABLED")
+        self.device = T.device("cpu")
+    #endregion
 
+    #region load agent from file
+    if not self.train:
+        print("agent not in training mode")
+        with open("agent.pt", "rb") as file:
+            self.model = pickle.load(file)
+    elif DEBUG_TRAINING_RESULT:
+        print("agent loaded despite training mode")
+        with open("agent.pt", "rb") as file:
+            self.model = pickle.load(file)
+    else:
+        print("agent in training mode")
+    #endregion
+
+    #region plot processing
+    #default value is False since we do not want to destroy our hard disk
+    #or impact performance during training.
+    self.plot_preprocessing = False
+    #gui_mode is not available in the provided framework
+    #this check makes it not crash when using the provided framework
+    hasattr_gui_mode = hasattr(self, "gui_mode")
+    print("has attribute gui_mode", hasattr_gui_mode)
+    if hasattr_gui_mode:
+        print("gui_mode", self.gui_mode)
+        #allow only in gui_mode
+        if self.gui_mode:
+            self.plot_preprocessing = PLOT_PREPROCESSING
+    print("plot_preprocessing", self.plot_preprocessing)
+    #endregion
+
+    self.processing_cache = {}
+    self.feature_cache = Cache("feature_cache")
+    self.visited_cache = Cache("visited_cache")
+    self.is_loop = False
+    self.last_action_random = False
+    self.turn_index = -1
 
 def act(self, game_state: dict) -> str:
     """
@@ -42,31 +108,62 @@ def act(self, game_state: dict) -> str:
     :param game_state: The dictionary that describes everything on the board.
     :return: The action to take as a string.
     """
+    step = game_state["step"]
+    if step == 1:
+        self.processing_cache = {}
+        self.feature_cache.reset()
+        self.visited_cache.reset()
 
-    random_prob = 0.1
-    if self.train and random.random() < random_prob:
+    self.turn_index += 1
+
+    append_game_state(game_state, self.visited_cache)
+
+    #region loop solution
+    #self.is_loop is only set during training
+    if self.is_loop:
+        #print("loop detected")
+        self.logger.debug("loop detected")
+        return act_exploration(self, game_state)
+    #endregion
+
+    #region Exploration (can occur only during training)
+    if self.train and random.random() < self.epsilon:
         self.logger.debug("Choosing action purely at random.")
+        #print("act randomly")
         # 80%: walk in any direction. 10% wait. 10% bomb.
-        return np.random.choice(ACTIONS, p=[.2, .2, .2, .2, .1, .1])
+        self.last_action_random = True
+        return act_exploration(self, game_state)
+    #endregion
 
-
+    #region Exploitation
     self.logger.debug("Querying model for action.")
-    X = state_to_features(game_state)
-    Q = np.dot(X, self.model)
-    return ACTIONS[np.argmax(Q)]
+    self.last_action_random = False
+    features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
+    #reshape the features to create a batch of size 1
+    #features = features.reshape(1, *features.shape)
+    #feature_tensor = T.tensor(features, dtype=T.float32, device=self.device)
+    if not hasattr(self, 'model'):
+        self.model = np.zeros((len(features),len(ACTIONS)))
+    actions = np.dot(features, self.model)
+    action_index = np.argmax(actions)
+    action = ACTIONS[action_index]
+    self.logger.debug(f"Select action: {action}")
+    return action
+    #endregion
 
+def state_to_features_cache_wrapper(turn_index, game_state: dict, feature_cache, visited_cache, processing_cache: dict, process_type, plot_preprocessing) -> np.array:
+    has_data, data = feature_cache.get_data(process_type, turn_index)
+    if has_data:
+        return data
 
-def state_to_features(game_state: dict) -> np.array:
-    """
-    *This is not a required function, but an idea to structure your code.*
+    data = state_to_features(game_state, processing_cache, process_type, plot_preprocessing)
+    feature_cache.set_data(process_type, turn_index, data)
+    return data
 
-    Converts the game state to the input of your model, i.e.
-    a feature vector.
-
-    You can find out about the state of the game environment via game_state,
-    which is a dictionary. Consult 'get_state_for_agent' in environment.py to see
-    what it contains.
-
+def state_to_features(game_state: dict, processing_cache: dict, process_type, plot_preprocessing) -> np.array:
+    """    
+    Converts the game state to the input of the model.
+    Returns different results depending on the specified architecture.    
     :param game_state:  A dictionary describing the current game board.
     :return: np.array
     """
@@ -74,41 +171,15 @@ def state_to_features(game_state: dict) -> np.array:
     if game_state is None:
         return None
 
-    # For example, you could construct several channels of equal shape, ...
-    feature_vector = np.append(game_state['round'], game_state['step'])
-    feature_vector = np.append(feature_vector, game_state['field'])
-
-    bombs = game_state['bombs']
-    bomb_count = len(bombs)
-    for i in range(bomb_count):
-        bomb_position, bomb_countdown = bombs[i]
-        feature_vector = np.append(feature_vector, bomb_position)
-        feature_vector = np.append(feature_vector, bomb_countdown)
-    for i in range(4-bomb_count):
-        feature_vector = np.append(feature_vector, (0,0,0))
-
-    feature_vector = np.append(feature_vector, game_state['explosion_map'])
-
-    coins = game_state['coins']
-    coin_count = len(coins)
-    for i in range(coin_count):
-        feature_vector = np.append(feature_vector, coins[i])
-    for i in range(9-coin_count):
-        feature_vector = np.append(feature_vector, (0,0))
+    #special case for raw - no preprocessing is required
+    if process_type == PROCESS_CONVOLUTION_RAW or process_type == PROCESS_TODO_SKIP_PREPROCESSING:
+        return process(game_state=game_state, preprocessing_result=None, process_type=process_type)
     
-    n,s,b,p = game_state['self']
-    feature_vector = np.append(feature_vector, s)
-    feature_vector = np.append(feature_vector, b)
-    feature_vector = np.append(feature_vector, p)
-    
-    others = game_state['others']
-    others_count = len(others)
-    for i in range(others_count):
-        n,s,b,p = others[i]
-        feature_vector = np.append(feature_vector, s)
-        feature_vector = np.append(feature_vector, b)
-        feature_vector = np.append(feature_vector, p)
-    for i in range(3-others_count):
-        feature_vector = np.append(feature_vector, (-1,-1,-1,-1))
-    
-    return feature_vector
+    #preprocess independent of which features we actually want to use
+    preprocessing_result = preprocess(game_state=game_state, plot=plot_preprocessing, processing_cache=processing_cache)
+    #process the results of preprocess depending on the model architecture
+    processing_result = process(game_state=game_state, preprocessing_result=preprocessing_result, process_type=process_type)
+    return processing_result
+
+def act_exploration(self, game_state):
+    return np.random.choice(ACTIONS, p=[.2, .2, .2, .2, .1, .1])
