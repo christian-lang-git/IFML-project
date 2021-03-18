@@ -15,6 +15,7 @@ VISITED_MAX = HYPER_PARAMETERS_PROCESSING["VISITED_MAX"]
 SONAR_RANGE = HYPER_PARAMETERS_PROCESSING["SONAR_RANGE"]
 SONAR_BAD_THRESHOLD = HYPER_PARAMETERS_PROCESSING["SONAR_BAD_THRESHOLD"]
 SONAR_GOOD_THRESHOLD = HYPER_PARAMETERS_PROCESSING["SONAR_GOOD_THRESHOLD"]
+USE_EXPLOSION_MAP = HYPER_PARAMETERS_PROCESSING["USE_EXPLOSION_MAP"]
 
 PRE_INDEX_PLAYERS = 0
 PRE_INDEX_COIN_VALUES = 1
@@ -262,7 +263,10 @@ def preprocess_danger_repulsor(agent_coords, field, explosion_map, bombs, enemie
         danger_repulsor[c] = np.divide((safety_time_field[c]+1), (bomb_time_field[c]+1))
         #danger_repulsor[c] = np.divide(safety_time_field[c] - bomb_time_field[c], 3)
     
-    danger_repulsor = np.clip(danger_repulsor + explosion_map, a_min=0, a_max=1)
+    if USE_EXPLOSION_MAP:
+        danger_repulsor = np.clip(danger_repulsor + explosion_map, a_min=0, a_max=1)
+    else:
+        danger_repulsor = np.clip(danger_repulsor, a_min=0, a_max=1)
 
     for bomb in bombs:
         if bomb[0] != agent_coords:
