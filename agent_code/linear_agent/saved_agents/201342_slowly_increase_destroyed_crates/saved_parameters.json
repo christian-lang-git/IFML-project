@@ -4,7 +4,7 @@
     "PLOT_PREPROCESSING": true,
     "DEBUG_TRAINING_RESULT": false,
     "FORCE_LOAD_AGENT": true,
-    "LOAD_AGENT_PATH": "saved_agents/201342_slowly_increase_destroyed_crates/agent_73.pt",
+    "LOAD_AGENT_PATH": "saved_agents/201309_agent_begins_to_learn_to_destroy_crates_using_coin_agent/agent_57.pt",
     "MODEL_ARCHITECTURE": {
       "model_type": "MODEL_TYPE_LINEAR",
       "process_type": "PROCESS_LINEAR_FULL"
@@ -41,16 +41,17 @@
   "GAME_REWARDS": {
     "COIN_COLLECTED": 1,
     "KILLED_OPPONENT": 5,
-    "CRATE_DESTROYED": 0.9,
-    "GOT_KILLED": -5,
+    "CRATE_DESTROYED": 0.5,
+    "GOT_KILLED": -1,
     "INVALID_ACTION": -0.1,
+    "E_DROPPED_BOMB_BAD": -0.5,
     "E_DROPPED_BOMB_NEAR_ENEMY": 0.5
   },
   "GAME_REWARD_FACTORS": {
     "MOVED_TOWARDS_COIN": 2,
     "MOVED_AWAY_FROM_COIN": 2.2,
-    "E_MOVED_TOWARDS_CRATE": 0,
-    "E_MOVED_AWAY_FROM_CRATE": 0,
+    "E_MOVED_TOWARDS_CRATE": 1,
+    "E_MOVED_AWAY_FROM_CRATE": 1.1,
     "E_DROPPED_BOMB_NEAR_CRATE": 1,
     "E_VISITED_PENALTY": 0.1
   }

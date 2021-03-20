@@ -56,7 +56,7 @@ END OF CALCULATED PARAMETERS
 
 # This is only an example!
 Transition = namedtuple('Transition',
-                        ('state', 'reward'))
+                        ('state', 'action', 'reward'))
 
 #Round_Result = namedtuple('Round_Result',
 #                        ('round_index', 'score', 'round_reward', 'epsilon'))
@@ -298,6 +298,7 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     #prepare next round
     self.round_index += 1
     self.round_reward = 0
+    self.transitions = []
 
     #reset termination request for next round
     self.request_termination = False
@@ -372,6 +373,8 @@ def finalize_round_train_or_validate(self, score):
     self.epoch_logger_current.finalize_round(score)
     end_flag = self.epoch_logger_current.try_finalize_epoch()    
     if end_flag:
+        print(self.model.max())
+        print(self.model.min())
         switch_epoch_logger(self)
     self.epsilon = self.epoch_logger_current.epsilon
 
@@ -392,25 +395,26 @@ def save_agent(self):
 def train(self, old_game_state, action_index, reward, new_game_state, termination_flag):
 
     features_old = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
-    
-    #features_new = 0.0
-    #if not termination_flag:
-    #    features_new = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
-
-    self.transitions.append(Transition(features_old, reward))
+    self.transitions.append(Transition(features_old, action_index, reward))
 
 
     if termination_flag:
         transition_count = len(self.transitions)
         rewards = np.array([t.reward for t in self.transitions])
-        gradient_list = np.empty((transition_count, len(features_old), len(ACTIONS)))
+        action_subbatches = [[] for a in ACTIONS]
+        losses = np.empty(transition_count)
         for i, transition in enumerate(self.transitions):
             X = transition.state
             discout_exponents = np.arange(0, transition_count-i)
             Y = np.sum(DISCOUNT_FACTOR**discout_exponents * rewards[i:])
-            if type(X) != type(Y): continue
-            gradient = np.dot(X.T, (Y - np.dot(X, self.model)))
-        self.model = np.sum(gradient_list,axis=0) / gradient_list.shape[0]
-
-    loss = 0
-    self.epoch_logger_current.add_loss(loss)
+            action = transition.action
+            losses[i] = Y - np.dot(X, self.model[:,action])
+            action_subbatches[action].append(np.dot(X.T, losses[i]))
+        model_update = np.zeros_like(self.model)
+        for a in range(model_update.shape[1]):
+            if len(action_subbatches[a]) > 0:
+                model_update[:,a] = np.sum(action_subbatches[a], axis=0) / len(action_subbatches[a])
+        self.model = self.model + LEARNING_RATE * model_update
+        
+        loss = np.mean(np.square(losses))
+        self.epoch_logger_current.add_loss(loss)

@@ -32,6 +32,8 @@ USE_CUDA = HYPER_PARAMETERS["USE_CUDA"]
 PLOT_PREPROCESSING = HYPER_PARAMETERS["PLOT_PREPROCESSING"]
 DEBUG_TRAINING_RESULT = HYPER_PARAMETERS["DEBUG_TRAINING_RESULT"]
 MODEL_ARCHITECTURE = HYPER_PARAMETERS["MODEL_ARCHITECTURE"]
+FORCE_LOAD_AGENT = HYPER_PARAMETERS["FORCE_LOAD_AGENT"]
+LOAD_AGENT_PATH = HYPER_PARAMETERS["LOAD_AGENT_PATH"]
 """
 END OF HYPER PARAMETERS
 CALCULATED PARAMETERS
@@ -66,13 +68,19 @@ def setup(self):
     #region load agent from file
     if not self.train:
         print("agent not in training mode")
-        with open("agent.pt", "rb") as file:
+        with open(LOAD_AGENT_PATH, "rb") as file:
             self.model = pickle.load(file)
-    elif DEBUG_TRAINING_RESULT:
+            print(self.model)
+    elif DEBUG_TRAINING_RESULT: 
         print("agent loaded despite training mode")
         with open("agent.pt", "rb") as file:
             self.model = pickle.load(file)
     else:
+        if FORCE_LOAD_AGENT and os.path.isfile(LOAD_AGENT_PATH):
+            print('model loaded from agent.pt for further training')
+            with open(LOAD_AGENT_PATH, "rb") as file:
+                self.model = pickle.load(file)
+            print(self.model)
         print("agent in training mode")
     #endregion
 
