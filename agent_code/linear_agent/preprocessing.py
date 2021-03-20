@@ -262,7 +262,10 @@ def preprocess_danger_repulsor(agent_coords, field, explosion_map, bombs, enemie
         danger_repulsor[c] = np.divide((safety_time_field[c]+1), (bomb_time_field[c]+1))
         #danger_repulsor[c] = np.divide(safety_time_field[c] - bomb_time_field[c], 3)
     
-    danger_repulsor = np.clip(danger_repulsor + explosion_map, a_min=0, a_max=1)
+    if USE_EXPLOSION_MAP:
+        danger_repulsor = np.clip(danger_repulsor + explosion_map, a_min=0, a_max=1)
+    else:
+        danger_repulsor = np.clip(danger_repulsor, a_min=0, a_max=1)
 
     for bomb in bombs:
         if bomb[0] != agent_coords:
