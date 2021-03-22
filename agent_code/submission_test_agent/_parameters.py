@@ -4,8 +4,8 @@ from ._dqn_presets import *
 from ._reward_presets import *
 
 HYPER_PARAMETERS = {
-    "USE_CUDA": True,
-    "PLOT_PREPROCESSING": True,
+    "USE_CUDA": False,
+    "PLOT_PREPROCESSING": False,
     "DEBUG_TRAINING_RESULT": False,
     "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_DQN_TYPE_L2_FULL,
 }
@@ -15,7 +15,7 @@ HYPER_PARAMETERS_TRAIN = {
     "USE_8_BATCHES": False,
     "REPLAY_BUFFER_CAPACITY": 250000,
     "BATCH_SIZE": 64,
-    "LEARNING_RATE": 0.0001,
+    "LEARNING_RATE": 0.00001,
     "GAMMA": 0.99,
     "TARGET_STEPS": 1000,
     "EPSILON_START": 0.1,

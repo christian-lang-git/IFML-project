@@ -2,6 +2,9 @@ import logging
 
 from fallbacks import pygame
 
+ANNOUNCE_RESULTS = True
+#ANNOUNCE_ROUND = 100
+
 # Game properties
 COLS = 17
 ROWS = 17

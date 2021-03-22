@@ -65,6 +65,10 @@ class Agent:
         self.train = train
 
         self.total_score = 0
+        self.total_coins_collected = 0#ADDED
+        self.total_kills = 0#ADDED
+        self.total_survived = 0#ADDED
+        self.total_crates = 0#ADDED
 
         self.dead = None
         self.score = None

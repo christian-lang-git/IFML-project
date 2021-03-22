@@ -145,6 +145,7 @@ class GenericWorld:
                         a.update_score(s.REWARD_COIN)
                         a.add_event(e.COIN_COLLECTED)
                         a.trophies.append(Trophy.coin_trophy)
+                        a.total_coins_collected += 1#ADDED
 
     def update_bombs(self):
         """
@@ -165,6 +166,7 @@ class GenericWorld:
                     if self.arena[x, y] == 1:
                         self.arena[x, y] = 0
                         bomb.owner.add_event(e.CRATE_DESTROYED)
+                        bomb.owner.total_crates += 1#ADDED
                         # Maybe reveal a coin
                         for c in self.coins:
                             if (c.x, c.y) == (x, y):
@@ -203,6 +205,7 @@ class GenericWorld:
                             explosion.owner.update_score(s.REWARD_KILL)
                             explosion.owner.add_event(e.KILLED_OPPONENT)
                             explosion.owner.trophies.append(pygame.transform.smoothscale(a.avatar, (15, 15)))
+                            explosion.owner.total_kills += 1#ADDED
             # Show smoke for a little longer
             if explosion.timer <= 0:
                 explosion.active = False
@@ -236,6 +239,14 @@ class GenericWorld:
                              f'screenshots/{self.round_id}_video.webm'])
             for f in glob.glob(f'screenshots/{self.round_id}_*.png'):
                 os.remove(f)
+
+        #print results
+        if s.ANNOUNCE_RESULTS:# and self.round == ANNOUNCE_ROUND:
+            print("------------------------")
+            print("round ended: ", self.round)
+            print("name, score, coins, kills, crates, survived")
+            for a in self.agents:
+                print(a.name, a.total_score, a.total_coins_collected, a.total_kills, a.total_crates, a.total_survived)
 
     def time_to_stop(self):
         # Check round stopping criteria
@@ -477,6 +488,7 @@ class BombeRLeWorld(GenericWorld):
         # Clean up survivors
         for a in self.active_agents:
             a.add_event(e.SURVIVED_ROUND)
+            a.total_survived += 1#ADDED
 
         # Send final event to agents that expect them
         for a in self.agents:

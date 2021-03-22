@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 plot_active = False
 
+PREFIX = "dqn"
 LEGEND_LOC = "best"
 VALIDATION_LOSS = False
 
@@ -78,7 +79,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_REWARD], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_REWARD], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_reward.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_reward.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -87,7 +88,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_SCORE], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_SCORE], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_score.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_score.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -96,7 +97,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_EPSILON], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_EPSILON], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_epsilon.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_epsilon.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -105,7 +106,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_CRATES], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_CRATES], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_crates.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_crates.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -114,7 +115,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_COINS], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_COINS], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_coins.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_coins.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -123,7 +124,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_KILLS], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_KILLS], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_kills.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_kills.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -133,7 +134,7 @@ def save_plots(data_training, data_validation):
     if VALIDATION_LOSS:
         ax.plot(lists_validation[INDEX_LOSS], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_loss.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_loss.pdf", format="pdf")
     plt.close()
 
     #actions
@@ -144,7 +145,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_WAIT], COLOR_WAIT, label="wait")
     ax.plot(lists_training[INDEX_MOVEMENT], COLOR_MOVEMENT, label="move")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_training_actions.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_training_actions.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -154,7 +155,7 @@ def save_plots(data_training, data_validation):
     #ax.plot(list_training_invalid_wait_percentage, COLOR_WAIT, label="wait")
     ax.plot(list_training_invalid_movement_percentage, COLOR_MOVEMENT, label="move")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_training_invalid_actions.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_training_invalid_actions.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -164,7 +165,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_validation[INDEX_WAIT], COLOR_WAIT, label="wait")
     ax.plot(lists_validation[INDEX_MOVEMENT], COLOR_MOVEMENT, label="move")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_validation_actions.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_validation_actions.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -174,7 +175,7 @@ def save_plots(data_training, data_validation):
     #ax.plot(list_validation_invalid_wait_percentage, COLOR_WAIT, label="wait")
     ax.plot(list_validation_invalid_movement_percentage, COLOR_MOVEMENT, label="move")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_validation_invalid_actions.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_validation_invalid_actions.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -183,7 +184,7 @@ def save_plots(data_training, data_validation):
     ax.plot(list_training_bad_bomb_percentage, COLOR_TRAIN, label="train")
     ax.plot(list_validation_bad_bomb_percentage, COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_bad_bomb.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_bad_bomb.pdf", format="pdf")
     plt.close()
 
     fig = plt.figure()
@@ -192,7 +193,7 @@ def save_plots(data_training, data_validation):
     ax.plot(lists_training[INDEX_LOOP], COLOR_TRAIN, label="train")
     ax.plot(lists_validation[INDEX_LOOP], COLOR_VALIDATE, label="validate")
     ax.legend(loc=LEGEND_LOC)
-    plt.savefig(fname="zz_plot_loops.svg", format="svg")
+    plt.savefig(fname=PREFIX+"_plot_loops.pdf", format="pdf")
     plt.close()
 
 
