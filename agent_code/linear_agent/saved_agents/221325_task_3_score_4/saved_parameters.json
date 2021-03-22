@@ -4,7 +4,7 @@
     "PLOT_PREPROCESSING": true,
     "DEBUG_TRAINING_RESULT": false,
     "FORCE_LOAD_AGENT": false,
-    "LOAD_AGENT_PATH": "saved_agents/agent_150.pt",
+    "LOAD_AGENT_PATH": "saved_agents/211059_100_crates_7_coins/agent_100.pt",
     "MODEL_ARCHITECTURE": {
       "model_type": "MODEL_TYPE_LINEAR",
       "process_type": "PROCESS_LINEAR_FULL"
@@ -40,8 +40,8 @@
     "USE_EXPLOSION_MAP": false
   },
   "GAME_REWARDS": {
-    "COIN_COLLECTED": 100,
-    "KILLED_OPPONENT": 500,
+    "COIN_COLLECTED": 1,
+    "KILLED_OPPONENT": 5,
     "GOT_KILLED": -0.5,
     "INVALID_ACTION": -0.75,
     "E_DANGER_EXCEEDED": -0.5,

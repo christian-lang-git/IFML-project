@@ -7,11 +7,12 @@ HYPER_PARAMETERS = {
     "USE_CUDA": True,
     "PLOT_PREPROCESSING": True,
     "DEBUG_TRAINING_RESULT": False,
-    "FORCE_LOAD_AGENT": True,
+    "FORCE_LOAD_AGENT": False,
     # "LOAD_AGENT_PATH": "saved_agents/191707_first_working_agent/agent_236.pt",
     # "LOAD_AGENT_PATH": "saved_agents/201309_agent_begins_to_learn_to_destroy_crates_using_coin_agent/agent_57.pt",
     # "LOAD_AGENT_PATH": "saved_agents/201342_slowly_increase_destroyed_crates/agent_73.pt",
-    "LOAD_AGENT_PATH": "saved_agents/agent_31.pt",
+    # "LOAD_AGENT_PATH": "saved_agents/201606_30_crates_at_epoch_31/agent_31.pt",
+    "LOAD_AGENT_PATH": "saved_agents/agent_150.pt",
     "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_LINEAR,
 }
 
@@ -20,19 +21,19 @@ HYPER_PARAMETERS_TRAIN = {
     "USE_8_BATCHES": False,
     "REPLAY_BUFFER_CAPACITY": 250000,
     "BATCH_SIZE": 64,
-    "LEARNING_RATE": 0.01,
+    "LEARNING_RATE": 0.001,
     "GAMMA": 0.99,
     "TARGET_STEPS": 1000,
     "EPSILON_START": 0.5,
     "EPSILON_END": 0.1,
-    "EPOCH_START_EPSILON_DECAY": 10,
-    "EPOCH_STOP_EPSILON_DECAY": 20,
+    "EPOCH_START_EPSILON_DECAY": 1,
+    "EPOCH_STOP_EPSILON_DECAY": 8,
     "EPOCH_LENGTH_TRAINING": 250,
     "EPOCH_LENGTH_VALIDATION": 75,
     "LOOP_THRESHOLD": 3,
     "LOOP_NUM_CHECKS": 10,
     "SKIP_LOOP": False,
-    "DISCOUNT_FACTOR": 0.5,
+    "DISCOUNT_FACTOR": 0.2,
 }
 
 HYPER_PARAMETERS_PROCESSING = {
