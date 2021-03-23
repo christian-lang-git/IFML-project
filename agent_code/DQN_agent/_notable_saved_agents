@@ -23,3 +23,8 @@ TODO
 
 L2 submission test: good
 2021_03_21-00_57-DQN_TYPE_L2-lr00001 agent_57
+
+
+2021_03_22-16_11-DQN_TYPE_L2-lr001-fixed_crate_density
+agent_20 highest score during validation
+agent_35 highest coins / crates during validation

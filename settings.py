@@ -2,15 +2,15 @@ import logging
 
 from fallbacks import pygame
 
-ANNOUNCE_RESULTS = False
+ANNOUNCE_RESULTS = True
 #ANNOUNCE_ROUND = 100
 
 # Game properties
 COLS = 17
 ROWS = 17
-CRATE_DENSITY = [0.0, 0.3, 0.75]
+#CRATE_DENSITY = [0.0, 0.3, 0.75]
 #CRATE_DENSITY = [0.0]
-#CRATE_DENSITY = [0.75]
+CRATE_DENSITY = [0.75]
 MAX_AGENTS = 4
 
 # Round properties
