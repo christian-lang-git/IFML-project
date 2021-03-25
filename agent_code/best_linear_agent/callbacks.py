@@ -1,22 +1,9 @@
-"""
-INSTALLATION COMMANDS:
-    pip install torch
-FOR CUDA SUPPORT ON GTX 1060:
-    conda install pytorch torchvision torchaudio cudatoolkit=10.2 -c pytorch -c=conda-forge
-"""
 import os
 import pickle
 import json
 import random
 import numpy as np
-import torch as T
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 
-from random import shuffle#TODO still needed here?
-
-from .dqn import *
 from .preprocessing import *
 from .bomberman import *
 from .cache import *
@@ -52,21 +39,12 @@ def setup(self):
 
     :param self: This object is passed to all callbacks and you can set arbitrary values.
     """
-    #region CUDA
-    if USE_CUDA and T.cuda.is_available():
-        print("CUDA AVAILABLE")
-        self.device = T.device("cuda")
-    else:                
-        print("CUDA NOT AVAILABLE OR DISABLED")
-        self.device = T.device("cpu")
-    #endregion
-
     #region load agent from file
     if not self.train:
         print("agent not in training mode")
         with open(LOAD_AGENT_PATH, "rb") as file:
             self.model = pickle.load(file)
-            print(self.model)
+            #print(self.model)
     elif DEBUG_TRAINING_RESULT: 
         print("agent loaded despite training mode")
         with open("agent.pt", "rb") as file:
@@ -76,7 +54,7 @@ def setup(self):
             print('model loaded from agent.pt for further training')
             with open(LOAD_AGENT_PATH, "rb") as file:
                 self.model = pickle.load(file)
-            print(self.model)
+            #print(self.model)
         print("agent in training mode")
     if not hasattr(self, 'model'):
         self.model = np.zeros((31,len(ACTIONS)))
@@ -101,8 +79,6 @@ def setup(self):
     self.processing_cache = {}
     self.feature_cache = Cache("feature_cache")
     self.visited_cache = Cache("visited_cache")
-    self.is_loop = False
-    self.last_action_random = False
     self.turn_index = -1
 
 def act(self, game_state: dict) -> str:
@@ -124,26 +100,16 @@ def act(self, game_state: dict) -> str:
 
     append_game_state(game_state, self.visited_cache)
 
-    #region loop solution
-    #self.is_loop is only set during training
-    if self.is_loop:
-        #print("loop detected")
-        self.logger.debug("loop detected")
-        return act_exploration(self, game_state)
-    #endregion
-
     #region Exploration (can occur only during training)
     if self.train and random.random() < self.epsilon:
         self.logger.debug("Choosing action purely at random.")
         #print("act randomly")
         # 80%: walk in any direction. 10% wait. 10% bomb.
-        self.last_action_random = True
         return act_exploration(self, game_state)
     #endregion
 
     #region Exploitation
     self.logger.debug("Querying model for action.")
-    self.last_action_random = False
     features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     #reshape the features to create a batch of size 1
     #features = features.reshape(1, *features.shape)

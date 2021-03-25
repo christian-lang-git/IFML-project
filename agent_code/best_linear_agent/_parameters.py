@@ -4,14 +4,10 @@ from ._model_presets import *
 from ._reward_presets import *
 
 HYPER_PARAMETERS = {
-    "USE_CUDA": True,
-    "PLOT_PREPROCESSING": True,
+    "USE_CUDA": False,
+    "PLOT_PREPROCESSING": False,
     "DEBUG_TRAINING_RESULT": False,
     "FORCE_LOAD_AGENT": False,
-    # "LOAD_AGENT_PATH": "saved_agents/191707_first_working_agent/agent_236.pt",
-    # "LOAD_AGENT_PATH": "saved_agents/201309_agent_begins_to_learn_to_destroy_crates_using_coin_agent/agent_57.pt",
-    # "LOAD_AGENT_PATH": "saved_agents/201342_slowly_increase_destroyed_crates/agent_73.pt",
-    # "LOAD_AGENT_PATH": "saved_agents/201606_30_crates_at_epoch_31/agent_31.pt",
     "LOAD_AGENT_PATH": "agent.pt",
     "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_LINEAR,
 }

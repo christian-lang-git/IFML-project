@@ -9,17 +9,11 @@ from .dqn import DQN
 from .callbacks import *
 from .rule_based import *
 from .preprocessing import *
-from .replay_buffer import ReplayBuffer
 from .epoch_logger import EpochLogger
 from .bomberman import *
 from .cache import *
 from .additional_definitions import *
 from ._parameters import *
-
-import torch as T
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 
 """
 HYPER PARAMETERS
@@ -83,12 +77,6 @@ def setup_training(self):
         json.dump(dict_save, file, indent=2)
     #endregion
     
-    #region PAPER: Algorithm 1 Line 1
-    #'''Quote:   Initialize replay memory D to capacity N'''
-    #self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_CAPACITY, feature_dim=FEATURE_DIM, device=self.device)
-    #self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_CAPACITY, feature_dim=MODEL_ARCHITECTURE["dim_input"], device=self.device, exploit_symmetry=EXPLOIT_SYMMETRY)    
-    #endregion
-
     #region initialize model
     self.transitions = []
 
@@ -301,8 +289,6 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.transitions = []
 
     #reset termination request for next round
-    self.request_termination = False
-    self.is_loop = False
     self.turn_index = -1
     
 def reward_from_events(self, events: List[str], event_values: List[float]) -> int:
@@ -367,7 +353,7 @@ def update_round_train_or_validate(self, events, event_values, old_game_state, s
     if self.currently_training:
         train(self, old_game_state=old_game_state, action_index=action_index, reward=reward, new_game_state=new_game_state, termination_flag=termination_flag)
         
-    self.epoch_logger_current.update_round(action_index, reward, invalid_action_flag, crates, coins, kills, self.is_loop, bomb_dropped_flag, bad_bomb_flag)
+    self.epoch_logger_current.update_round(action_index, reward, invalid_action_flag, crates, coins, kills, False, bomb_dropped_flag, bad_bomb_flag)
 
 def finalize_round_train_or_validate(self, score):
     self.epoch_logger_current.finalize_round(score)

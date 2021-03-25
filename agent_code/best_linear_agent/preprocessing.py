@@ -2,7 +2,6 @@ import pickle
 import math
 import numpy as np
 from collections import deque
-from .dqn import *
 from .bomberman import *
 from ._parameters import HYPER_PARAMETERS_PROCESSING
 from .additional_definitions import *
