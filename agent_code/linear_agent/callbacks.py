@@ -36,12 +36,8 @@ FORCE_LOAD_AGENT = HYPER_PARAMETERS["FORCE_LOAD_AGENT"]
 LOAD_AGENT_PATH = HYPER_PARAMETERS["LOAD_AGENT_PATH"]
 """
 END OF HYPER PARAMETERS
-CALCULATED PARAMETERS
 """
-#TODO unused
-"""
-END OF CALCULATED PARAMETERS
-"""
+
 def setup(self):
     """
     Setup your code. This is called once when loading each agent.
@@ -82,6 +78,8 @@ def setup(self):
                 self.model = pickle.load(file)
             print(self.model)
         print("agent in training mode")
+    if not hasattr(self, 'model'):
+        self.model = np.zeros((31,len(ACTIONS)))
     #endregion
 
     #region plot processing
@@ -150,8 +148,6 @@ def act(self, game_state: dict) -> str:
     #reshape the features to create a batch of size 1
     #features = features.reshape(1, *features.shape)
     #feature_tensor = T.tensor(features, dtype=T.float32, device=self.device)
-    if not hasattr(self, 'model'):
-        self.model = np.zeros((len(features),len(ACTIONS)))
     actions = np.dot(features, self.model)
     action_index = np.argmax(actions)
     action = ACTIONS[action_index]
