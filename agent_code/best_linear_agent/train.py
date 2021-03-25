@@ -5,7 +5,6 @@ from collections import namedtuple, deque
 from typing import List
 import events as e
 import numpy as np
-from .dqn import DQN
 from .callbacks import *
 from .preprocessing import *
 from .epoch_logger import EpochLogger
