@@ -7,7 +7,6 @@ import events as e
 import numpy as np
 from .dqn import DQN
 from .callbacks import *
-from .rule_based import *
 from .preprocessing import *
 from .epoch_logger import EpochLogger
 from .bomberman import *
@@ -144,21 +143,16 @@ def insert_events_raw(self, new_game_state: dict, events: List[str], event_value
     event_values.append(visited_penalty)
 
 def insert_events(self, old_game_state: dict, self_action: str, new_game_state: dict, events: List[str], event_values: List[float]):
-    #old_preprocessed = preprocess(old_game_state, plot=False)
-    #old_coin_values = old_preprocessed[1]
-    #old_coin_value = old_coin_values[old_coords]
-    #print("insert_events state_to_features old: ", PROCESS_LINEAR)
     old_features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR_FULL, plot_preprocessing=self.plot_preprocessing)
-    #print("insert_events state_to_features new: ", PROCESS_LINEAR)
     new_features = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR_FULL, plot_preprocessing=self.plot_preprocessing)
 
+    #check moved towards/away from coin
     insert_events_towards_away(self, old_features=old_features, events=events, event_values=event_values,
         feature_index=LINEAR_INDEX_COIN_VALUE_PLAYER,
         towards_event=E_MOVED_TOWARDS_COIN,
         away_event=E_MOVED_AWAY_FROM_COIN)
 
-    #only check moved towards/away from crate if bomb is ready
-    #if old_features[LINEAR_INDEX_BOMB_STATUS]:
+    #check moved towards/away from crate
     insert_events_towards_away(self, old_features=old_features, events=events, event_values=event_values,
         feature_index=LINEAR_INDEX_CRATE_VALUE_PLAYER, 
         towards_event=E_MOVED_TOWARDS_CRATE,
@@ -186,56 +180,42 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
                     event_values.append(None)
             break
 
-    #check if certain death
+    #check if certain death predicted
     insert_events_danger_exceeded(self, old_features=old_features, new_features=new_features, events=events, event_values=event_values)
 
     #visited penalty is skipped if a good bomb was dropped
     if good_bomb:
         return
     #insert visited penalty
-    #player_coords = new_game_state["self"][3]
-    #visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_game_state["visited"][player_coords]
     visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_features[LINEAR_INDEX_VISITED_PENALTY_PLAYER]
-    #print("visited penalty", visited_penalty)
     events.append(E_VISITED_PENALTY)
     event_values.append(visited_penalty)
     
 
 def insert_events_towards_away(self, old_features, feature_index, towards_event, away_event, events: List[str], event_values: List[float]):
-    #old_preprocessed = preprocess(old_game_state, plot=False)
-    #old_coin_values = old_preprocessed[1]
-    #old_coin_value = old_coin_values[old_coords]
     old_value = old_features[feature_index]
 
     new_value = -1
     moved = False
     for event in events:
         if event == e.MOVED_LEFT:
-            #print("MOVED_LEFT")
             moved = True
             new_value = old_features[feature_index+1]
         elif event == e.MOVED_RIGHT:
-            #print("MOVED_RIGHT")
             moved = True
             new_value = old_features[feature_index+2]
         elif event == e.MOVED_UP:
-            #print("MOVED_UP")
             moved = True
             new_value = old_features[feature_index+3]
         elif event == e.MOVED_DOWN:
-            #print("MOVED_DOWN")
             moved = True
             new_value = old_features[feature_index+4]
 
     if moved:
-        #print("old_coin_value",old_coin_value)
-        #print("new_coin_value",new_coin_value)
         if new_value > old_value:
-            #print(f"value should have increased from {old_coin_value} to {new_coin_value}")
             events.append(towards_event)
             event_values.append(GAME_REWARD_FACTORS[towards_event] * (new_value - old_value))
         elif new_value < old_value:
-            #print(f"value should have decreased from {old_coin_value} to {new_coin_value}")
             events.append(away_event)
             event_values.append(GAME_REWARD_FACTORS[away_event] * (new_value - old_value))
 
@@ -243,19 +223,15 @@ def insert_events_towards_away(self, old_features, feature_index, towards_event,
             print(old_value, new_value)
 
 def insert_events_danger_exceeded(self, old_features, new_features, events: List[str], event_values):
-    #old_preprocessed = preprocess(old_game_state, plot=False)
-    #old_coin_values = old_preprocessed[1]
-    #old_coin_value = old_coin_values[old_coords]
     old_value = old_features[LINEAR_INDEX_DANGER_PLAYER]
+    #check if danger already exceeded
     if old_value > 0.99:
-        #print("DANGER EXCEEDED LAST TURN")
         return
+
     new_value = new_features[LINEAR_INDEX_DANGER_PLAYER]
     if new_value > 0.99:
-        #print(f"value should have increased from {old_coin_value} to {new_coin_value}")
         events.append(E_DANGER_EXCEEDED)
         event_values.append(None)
-        #print("DANGER EXCEEDED")
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     """
@@ -311,7 +287,6 @@ def reward_from_events(self, events: List[str], event_values: List[float]) -> in
                 print(event, event_values[index])
 
     self.logger.info(f"Awarded {reward_sum} for events {', '.join(events)}")
-    #print(f"Awarded {reward_sum} for events {', '.join(events)}")
     return reward_sum
 
 def update_round_train_or_validate(self, events, event_values, old_game_state, self_action, new_game_state, termination_flag):
@@ -321,6 +296,7 @@ def update_round_train_or_validate(self, events, event_values, old_game_state, s
 
     reward = reward_from_events(self, events, event_values)
 
+    #for debugging in gui mode
     hasattr_gui_mode = hasattr(self, "gui_mode")
     if hasattr_gui_mode:
         #allow only in gui_mode

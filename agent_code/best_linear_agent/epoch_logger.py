@@ -73,7 +73,6 @@ class EpochLogger():
         self.round_loss_count += 1
 
     def finalize_round(self, score):
-        #print(f"[{self.name}] finalize round: {self.current_round_index} with epsilon {self.epsilon}")
         #set the score of the current round
         self.array_score[self.current_round_index] = score
         #set the mean loss of the current round
@@ -92,22 +91,15 @@ class EpochLogger():
 
 
     def set_epsilon_for_round(self):
-        #check if more rounds than specified are played.
-        #otherwise the LERP below will extrapolate and overshoot the target (epsilon_end)
-        #if self.total_round_index >= self.number_rounds_decaying:
-        #    return self.epsilon_end
-        #LERP of epsilon based on the round
-        #t = self.total_round_index / (self.number_rounds_decaying-1)
-        #self.epsilon = (1-t) * self.epsilon_start + t * self.epsilon_end
-
         #check if still in non decay phase
         if self.epoch_index < self.epoch_index_start_decay:
             return self.epsilon_start
+
         #check if more rounds than specified are played.
         #otherwise the LERP below will extrapolate and overshoot the target (epsilon_end)
         if self.epoch_index >= self.epoch_index_stop_decay:
             return self.epsilon_end
-        #self.total_round_index = epoch * EPOCH_LENGTH_TRAINING + round
+            
         t = (self.total_round_index - self.round_index_start_decay) / (self.number_rounds_decaying-1)
         self.epsilon = (1-t) * self.epsilon_start + t * self.epsilon_end
 
@@ -116,6 +108,7 @@ class EpochLogger():
         #check for end of epoch
         if self.current_round_index < self.epoch_length:
             return False
+
         epoch_result = self.finalize_epoch()
         self.store_epoch_result(epoch_result)
         return True       
