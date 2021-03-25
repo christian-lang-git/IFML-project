@@ -12,8 +12,7 @@ HYPER_PARAMETERS = {
     # "LOAD_AGENT_PATH": "saved_agents/201309_agent_begins_to_learn_to_destroy_crates_using_coin_agent/agent_57.pt",
     # "LOAD_AGENT_PATH": "saved_agents/201342_slowly_increase_destroyed_crates/agent_73.pt",
     # "LOAD_AGENT_PATH": "saved_agents/201606_30_crates_at_epoch_31/agent_31.pt",
-    #"LOAD_AGENT_PATH": "saved_agents/agent.pt",
-    "LOAD_AGENT_PATH": "agent.pt",
+    "LOAD_AGENT_PATH": "saved_agents/221325_task_3_score_4/agent_115.pt",
     "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_LINEAR,
 }
 
@@ -28,7 +27,7 @@ HYPER_PARAMETERS_TRAIN = {
     "EPSILON_START": 0.5,
     "EPSILON_END": 0.1,
     "EPOCH_START_EPSILON_DECAY": 1,
-    "EPOCH_STOP_EPSILON_DECAY": 8,
+    "EPOCH_STOP_EPSILON_DECAY": 15,
     "EPOCH_LENGTH_TRAINING": 250,
     "EPOCH_LENGTH_VALIDATION": 75,
     "LOOP_THRESHOLD": 3,

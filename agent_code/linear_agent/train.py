@@ -413,7 +413,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
         model_update = np.zeros_like(self.model)
         for a in range(model_update.shape[1]):
             if len(action_subbatches[a]) > 0:
-                model_update[:,a] = np.sum(action_subbatches[a], axis=0) / len(action_subbatches[a])
+                model_update[:,a] = np.mean(action_subbatches[a], axis=0)
         self.model = self.model + LEARNING_RATE * model_update
         
         loss = np.mean(np.square(losses))
