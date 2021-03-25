@@ -23,8 +23,8 @@ MODEL_ARCHITECTURE_DQN_TYPE_L2_FULL = {
     "process_type": PROCESS_LINEAR_FULL,
     "dim_input": [31],
     "dim_output": NUM_ACTIONS,
-    "dim_layer_full_1": 16,
-    "dim_layer_full_2": 16,
+    "dim_layer_full_1": 128,
+    "dim_layer_full_2": 128,
 }
 MODEL_ARCHITECTURE_DQN_TYPE_L3 = {
     "model_type": DQN_TYPE_L3,
