@@ -10,15 +10,15 @@
         31
       ],
       "dim_output": 6,
-      "dim_layer_full_1": 16,
-      "dim_layer_full_2": 16
+      "dim_layer_full_1": 128,
+      "dim_layer_full_2": 128
     }
   },
   "HYPER_PARAMETERS_TRAIN": {
     "EXPLOIT_SYMMETRY": false,
     "USE_8_BATCHES": false,
     "REPLAY_BUFFER_CAPACITY": 250000,
-    "BATCH_SIZE": 64,
+    "BATCH_SIZE": 32,
     "LEARNING_RATE": 0.001,
     "GAMMA": 0.99,
     "TARGET_STEPS": 1000,
