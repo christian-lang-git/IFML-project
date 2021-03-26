@@ -99,7 +99,7 @@ MODEL_ARCHITECTURE_LINEAR = {
     "process_type": PROCESS_LINEAR_FULL,
 }
 
-MODEL_ARCHITECTURE_TODO = {
-    "model_type": MODEL_TYPE_TODO,
-    "process_type": PROCESS_TODO,
+MODEL_ARCHITECTURE_LINEAR_RAW = {
+    "model_type": MODEL_TYPE_LINEAR_RAW,
+    "process_type": PROCESS_LINEAR_RAW,
 }

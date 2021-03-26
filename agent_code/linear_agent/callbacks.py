@@ -79,7 +79,7 @@ def setup(self):
             print(self.model)
         print("agent in training mode")
     if not hasattr(self, 'model'):
-        self.model = np.zeros((31,len(ACTIONS)))
+        self.model = np.zeros((1445,len(ACTIONS)))
     #endregion
 
     #region plot processing

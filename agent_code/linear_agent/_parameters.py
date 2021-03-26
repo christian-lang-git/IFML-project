@@ -13,7 +13,7 @@ HYPER_PARAMETERS = {
     # "LOAD_AGENT_PATH": "saved_agents/201342_slowly_increase_destroyed_crates/agent_73.pt",
     # "LOAD_AGENT_PATH": "saved_agents/201606_30_crates_at_epoch_31/agent_31.pt",
     "LOAD_AGENT_PATH": "agent.pt",
-    "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_LINEAR,
+    "MODEL_ARCHITECTURE": MODEL_ARCHITECTURE_LINEAR_RAW,
 }
 
 HYPER_PARAMETERS_TRAIN = {

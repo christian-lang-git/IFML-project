@@ -688,7 +688,7 @@ def process(game_state: dict, preprocessing_result, process_type) -> np.array:
         PROCESS_LINEAR_SMALL: process_linear_small,
         PROCESS_CONVOLUTION: process_convolution,
         PROCESS_CONVOLUTION_RAW: process_convolution_raw,
-        PROCESS_TODO: process_todo,
+        PROCESS_LINEAR_RAW: process_linear_raw,
     }
     func = switch.get(process_type, "invalid_function")
     #print("process: ", process_type, func)
@@ -939,3 +939,7 @@ def process_convolution_raw(game_state: dict, preprocessing_result) -> np.array:
         
     #return np.stack((field, players, explosion_map, f_bombs, f_coins))
     return np.stack((field, players, visited, f_bombs, f_coins))
+
+def process_linear_raw(game_state: dict, preprocessing_result) -> np.array:
+    stacked_features = process_convolution_raw(game_state, preprocessing_result)
+    return stacked_features.flatten()
