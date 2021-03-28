@@ -2,12 +2,14 @@ import pickle
 import numpy as np
 from .bomberman import *
 
-"""
-The EpochLogger is used to gather data describing the performance and actions of the agent.
-This allows more robust comparison of agents at different stages of training.
-We use the term epoch to describe a sequence of multiple episodes.
-"""
+
 class EpochLogger():
+    """
+    The EpochLogger is used to gather data describing the performance and actions of the agent.
+    This allows more robust comparison of agents at different stages of training.
+    We use the term epoch to describe a sequence of multiple episodes.
+    """
+
     def __init__(self, name, epoch_length, epsilon_start, epsilon_end, epoch_index_start_decay, epoch_index_stop_decay):
         self.name = name                    #the name of this logger
         self.epoch_length = epoch_length    #the number of episodes for each epoch in this logger
@@ -23,11 +25,11 @@ class EpochLogger():
         self.round_index_stop_decay = epoch_index_stop_decay * epoch_length
         self.number_rounds_decaying = self.round_index_stop_decay - self.round_index_start_decay  #the number of total rounds epsilon is decaying
 
-    """
-    Sets EpochLogger to the initial state of an epoch and increments epoch index.
-    This allows to recycle the same EpochLogger after each epoch.
-    """
     def start_epoch(self):
+        """
+        Sets EpochLogger to the initial state of an epoch and increments epoch index.
+        This allows to recycle the same EpochLogger after each epoch.
+        """
         self.epoch_index += 1
         print(f"[{self.name}] start epoch: {self.epoch_index}")
         self.current_round_index = 0
@@ -92,14 +94,6 @@ class EpochLogger():
 
 
     def set_epsilon_for_round(self):
-        #check if more rounds than specified are played.
-        #otherwise the LERP below will extrapolate and overshoot the target (epsilon_end)
-        #if self.total_round_index >= self.number_rounds_decaying:
-        #    return self.epsilon_end
-        #LERP of epsilon based on the round
-        #t = self.total_round_index / (self.number_rounds_decaying-1)
-        #self.epsilon = (1-t) * self.epsilon_start + t * self.epsilon_end
-
         #check if still in non decay phase
         if self.epoch_index < self.epoch_index_start_decay:
             return self.epsilon_start
@@ -107,7 +101,7 @@ class EpochLogger():
         #otherwise the LERP below will extrapolate and overshoot the target (epsilon_end)
         if self.epoch_index >= self.epoch_index_stop_decay:
             return self.epsilon_end
-        #self.total_round_index = epoch * EPOCH_LENGTH_TRAINING + round
+        #LERP    
         t = (self.total_round_index - self.round_index_start_decay) / (self.number_rounds_decaying-1)
         self.epsilon = (1-t) * self.epsilon_start + t * self.epsilon_end
 

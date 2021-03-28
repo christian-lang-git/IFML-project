@@ -158,6 +158,9 @@ def act(self, game_state: dict) -> str:
     #endregion
 
 def state_to_features_cache_wrapper(turn_index, game_state: dict, feature_cache, visited_cache, processing_cache: dict, process_type, plot_preprocessing) -> np.array:
+    """
+    Wrapper for state_to_features that looks for cached results
+    """
     has_data, data = feature_cache.get_data(process_type, turn_index)
     if has_data:
         return data
@@ -170,7 +173,10 @@ def state_to_features(game_state: dict, processing_cache: dict, process_type, pl
     """    
     Converts the game state to the input of the model.
     Returns different results depending on the specified architecture.    
-    :param game_state:  A dictionary describing the current game board.
+    :param game_state:  A dictionary describing the current game board. 
+    :param processing_cache:  A dictionary used for caching preprocessing results.
+    :param process_type:  determines which processing function is called.
+    :param plot_preprocessing:  determines whether preprocessing fields should be saved to a file.
     :return: np.array
     """
     # This is the dict before the game begins and after it ends
@@ -189,11 +195,3 @@ def state_to_features(game_state: dict, processing_cache: dict, process_type, pl
 
 def act_exploration(self, game_state):
     return np.random.choice(ACTIONS, p=[.2, .2, .2, .2, .1, .1])
-
-
-def dummy_1(self):
-    """
-    Important function during training.
-    Do not change. (see train.py)
-    """
-    pass

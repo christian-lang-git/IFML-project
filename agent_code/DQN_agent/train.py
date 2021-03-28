@@ -7,7 +7,6 @@ import events as e
 import numpy as np
 from .dqn import DQN
 from .callbacks import *
-from .rule_based import *
 from .preprocessing import *
 from .replay_buffer import ReplayBuffer
 from .epoch_logger import EpochLogger
@@ -46,22 +45,6 @@ INSERT_EVENTS = HYPER_PARAMETERS_TRAIN["INSERT_EVENTS"]
 """
 END OF HYPER PARAMETERS
 """
-"""
-CALCULATED PARAMETERS
-"""
-#NUMBER_ROUNDS = PLANNED_NUMBER_OF_EPOCHS * (EPOCH_LENGTH_TRAINING + EPOCH_LENGTH_VALIDATION)
-#NUMBER_TRAINING_ROUNDS = PLANNED_NUMBER_OF_EPOCHS * EPOCH_LENGTH_TRAINING
-"""
-END OF CALCULATED PARAMETERS
-"""
-
-# This is only an example!
-#Transition = namedtuple('Transition',
-#                        ('state', 'action', 'next_state', 'reward'))
-
-#Round_Result = namedtuple('Round_Result',
-#                        ('round_index', 'score', 'round_reward', 'epsilon'))
-
 
 def setup_training(self):
     """
@@ -86,13 +69,11 @@ def setup_training(self):
     
     #region PAPER: Algorithm 1 Line 1
     '''Quote:   Initialize replay memory D to capacity N'''
-    #self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_CAPACITY, feature_dim=FEATURE_DIM, device=self.device)
     self.replay_buffer = ReplayBuffer(capacity=REPLAY_BUFFER_CAPACITY, feature_dim=MODEL_ARCHITECTURE["dim_input"], device=self.device, exploit_symmetry=EXPLOIT_SYMMETRY)    
     #endregion
 
     #region PAPER: Algorithm 1 Line 3
     '''Quote:   Initialize target action-value function Q_hat with weights theta^{minus} = theta'''
-    #self.Q_hat = DQN(input_dims=FEATURE_DIM, fc1_dims=LAYER_1_SIZE, fc2_dims=LAYER_2_SIZE, n_actions=NUM_ACTIONS).to(self.device)
     self.Q_hat = Create_DQN(model_architecture=MODEL_ARCHITECTURE).to(self.device)
     self.Q_hat.copy_from(self.Q)
     #endregion
@@ -119,14 +100,8 @@ def setup_training(self):
     self.optimizer = optim.Adam(self.Q.parameters(), lr=LEARNING_RATE)
     self.loss = nn.MSELoss()
 
-    #setup rule based
-    #setup_rule_based(self)
-    #insert_function_code(act_exploration, act_rule_based)
-    #insert_function_code_rename(dummy_1, look_for_targets)
-
-    self.request_termination = False
-    self.loop_detector = LoopDetector(400)
-
+    #currently unused
+    #self.loop_detector = LoopDetector(400)
 
 
 def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_state: dict, events: List[str]):
@@ -152,24 +127,18 @@ def game_events_occurred(self, old_game_state: dict, self_action: str, new_game_
 
     #this happens at the beginning of a new round
     if self_action == None:
-        #print(old_game_state)
-        #print(new_game_state)
-        #print(events)
         return
-
     
     append_game_state(old_game_state, self.visited_cache)
     append_game_state(new_game_state, self.visited_cache)
 
     event_values=[None] * len(events)
 
-
     #when in raw mode, no preprocessing is done and the preprocessing based auxiliary events are skipped        
     if INSERT_EVENTS == EVENTS_ALL:
         insert_events(self, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, events=events, event_values=event_values)
     elif INSERT_EVENTS == EVENTS_RAW:
         insert_events_raw(self, new_game_state=new_game_state, events=events, event_values=event_values)
-
 
     update_round_train_or_validate(self, events=events, event_values=event_values, old_game_state=old_game_state, self_action=self_action, new_game_state=new_game_state, termination_flag=False)
       
@@ -181,21 +150,16 @@ def insert_events_raw(self, new_game_state: dict, events: List[str], event_value
     event_values.append(visited_penalty)
 
 def insert_events(self, old_game_state: dict, self_action: str, new_game_state: dict, events: List[str], event_values: List[float]):
-    #old_preprocessed = preprocess(old_game_state, plot=False)
-    #old_coin_values = old_preprocessed[1]
-    #old_coin_value = old_coin_values[old_coords]
-    #print("insert_events state_to_features old: ", PROCESS_LINEAR)
     old_features = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR_FULL, plot_preprocessing=self.plot_preprocessing)
-    #print("insert_events state_to_features new: ", PROCESS_LINEAR)
     new_features = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=PROCESS_LINEAR_FULL, plot_preprocessing=self.plot_preprocessing)
 
+    #check moved towards/away from coin
     insert_events_towards_away(self, old_features=old_features, events=events, event_values=event_values,
         feature_index=LINEAR_INDEX_COIN_VALUE_PLAYER,
         towards_event=E_MOVED_TOWARDS_COIN,
         away_event=E_MOVED_AWAY_FROM_COIN)
 
-    #only check moved towards/away from crate if bomb is ready
-    #if old_features[LINEAR_INDEX_BOMB_STATUS]:
+    #check moved towards/away from crate
     insert_events_towards_away(self, old_features=old_features, events=events, event_values=event_values,
         feature_index=LINEAR_INDEX_CRATE_VALUE_PLAYER, 
         towards_event=E_MOVED_TOWARDS_CRATE,
@@ -230,100 +194,51 @@ def insert_events(self, old_game_state: dict, self_action: str, new_game_state: 
     if good_bomb:
         return
     #insert visited penalty
-    #player_coords = new_game_state["self"][3]
-    #visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_game_state["visited"][player_coords]
     visited_penalty = GAME_REWARD_FACTORS[E_VISITED_PENALTY] * new_features[LINEAR_INDEX_VISITED_PENALTY_PLAYER]
-    #print("visited penalty", visited_penalty)
     events.append(E_VISITED_PENALTY)
     event_values.append(visited_penalty)
     
 
 def insert_events_towards_away(self, old_features, feature_index, towards_event, away_event, events: List[str], event_values: List[float]):
-    #old_preprocessed = preprocess(old_game_state, plot=False)
-    #old_coin_values = old_preprocessed[1]
-    #old_coin_value = old_coin_values[old_coords]
     old_value = old_features[feature_index]
 
     new_value = -1
     moved = False
     for event in events:
         if event == e.MOVED_LEFT:
-            #print("MOVED_LEFT")
             moved = True
             new_value = old_features[feature_index+1]
         elif event == e.MOVED_RIGHT:
-            #print("MOVED_RIGHT")
             moved = True
             new_value = old_features[feature_index+2]
         elif event == e.MOVED_UP:
-            #print("MOVED_UP")
             moved = True
             new_value = old_features[feature_index+3]
         elif event == e.MOVED_DOWN:
-            #print("MOVED_DOWN")
             moved = True
             new_value = old_features[feature_index+4]
 
     if moved:
-        #print("old_coin_value",old_coin_value)
-        #print("new_coin_value",new_coin_value)
+        #check if the value increased --> insert towards event
         if new_value > old_value:
-            #print(f"value should have increased from {old_coin_value} to {new_coin_value}")
             events.append(towards_event)
             event_values.append(GAME_REWARD_FACTORS[towards_event] * (new_value - old_value))
+        #check if the value decreased --> insert away event
         elif new_value < old_value:
-            #print(f"value should have decreased from {old_coin_value} to {new_coin_value}")
             events.append(away_event)
             event_values.append(GAME_REWARD_FACTORS[away_event] * (new_value - old_value))
-
+        #debugging in gui mode
         if self.gui_mode:
             print(old_value, new_value)
 
 def insert_events_danger_exceeded(self, old_features, new_features, events: List[str], event_values):
-    #old_preprocessed = preprocess(old_game_state, plot=False)
-    #old_coin_values = old_preprocessed[1]
-    #old_coin_value = old_coin_values[old_coords]
     old_value = old_features[LINEAR_INDEX_DANGER_PLAYER]
     if old_value > 0.99:
-        #print("DANGER EXCEEDED LAST TURN")
         return
     new_value = new_features[LINEAR_INDEX_DANGER_PLAYER]
     if new_value > 0.99:
-        #print(f"value should have increased from {old_coin_value} to {new_coin_value}")
         events.append(E_DANGER_EXCEEDED)
         event_values.append(None)
-        #print("DANGER EXCEEDED")
-"""
-    old_value = old_features[LINEAR_INDEX_DANGER_PLAYER]
-
-    new_value = -1
-    moved = False
-    for event in events:
-        if event == e.MOVED_LEFT:
-            #print("MOVED_LEFT")
-            moved = True
-            new_value = old_features[LINEAR_INDEX_DANGER_PLAYER+1]
-        elif event == e.MOVED_RIGHT:
-            #print("MOVED_RIGHT")
-            moved = True
-            new_value = old_features[LINEAR_INDEX_DANGER_PLAYER+2]
-        elif event == e.MOVED_UP:
-            #print("MOVED_UP")
-            moved = True
-            new_value = old_features[LINEAR_INDEX_DANGER_PLAYER+3]
-        elif event == e.MOVED_DOWN:
-            #print("MOVED_DOWN")
-            moved = True
-            new_value = old_features[LINEAR_INDEX_DANGER_PLAYER+4]
-
-    if moved:
-        #print("old_coin_value",old_coin_value)
-        #print("new_coin_value",new_coin_value)
-        if new_value > 0.99:
-            #print(f"value should have increased from {old_coin_value} to {new_coin_value}")
-            events.append(E_DANGER_EXCEEDED)
-            print("DANKGER EXCEEDED")
-"""
 
 def end_of_round(self, last_game_state: dict, last_action: str, events: List[str]):
     """
@@ -355,11 +270,11 @@ def end_of_round(self, last_game_state: dict, last_action: str, events: List[str
     self.round_index += 1
     self.round_reward = 0
 
-    #reset termination request for next round
-    self.request_termination = False
     self.is_loop = False
-    self.loop_detector.reset()
     self.turn_index = -1
+    
+    #currently unused
+    #self.loop_detector.reset()
     
 def reward_from_events(self, events: List[str], event_values: List[float]) -> int:
     """
@@ -381,13 +296,11 @@ def reward_from_events(self, events: List[str], event_values: List[float]) -> in
                 print(event, event_values[index])
 
     self.logger.info(f"Awarded {reward_sum} for events {', '.join(events)}")
-    #print(f"Awarded {reward_sum} for events {', '.join(events)}")
     return reward_sum
 
 def update_round_train_or_validate(self, events, event_values, old_game_state, self_action, new_game_state, termination_flag):
     
     if self_action == None:
-        #print("None action")
         return
 
     #region PAPER: Algorithm 1 Line 11
@@ -453,8 +366,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
     #list with indices from 0 to BATCH_SIZE-1 used to access array later
     arange = np.arange(BATCH_SIZE, dtype=np.int32)
 
-    #contrary to the paper, for now, we re-calculate phi_t for better readability.
-    #--> changed, we use cache now
+    #get cached phi_t or calculate 
     features_old = state_to_features_cache_wrapper(turn_index=self.turn_index, game_state=old_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     
     #region PAPER: Algorithm 1 Line 13
@@ -464,7 +376,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
         features_new = state_to_features_cache_wrapper(turn_index=self.turn_index+1, game_state=new_game_state, feature_cache=self.feature_cache, visited_cache=self.visited_cache, processing_cache=self.processing_cache, process_type=MODEL_ARCHITECTURE["process_type"], plot_preprocessing=self.plot_preprocessing)
     #endregion
 
-    #check if the game state and action pairing is identical to one of the last game states
+    #check if the game state and action pairing is identical to one of the last prairings
     self.is_loop = self.replay_buffer.check_for_loop(old_state=features_old, action_index=action_index, loop_num_checks=LOOP_NUM_CHECKS)
     if self.is_loop and SKIP_LOOP:
         return
@@ -480,7 +392,7 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
     #endregion
 
     #since we exploit symmetry, we gain 8 new transitions per iteration of the game.
-    #this motivates the use of 8 mini batches per iteration 
+    #this motivates the ability to use 8 mini batches per iteration 
     number_of_batches = 8 if (EXPLOIT_SYMMETRY and USE_8_BATCHES) else 1
     for i in range(number_of_batches):
 
@@ -501,8 +413,6 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
         _q_hat[batch_termination_flag] = 0.0
         #where the termination flag is set, q_hat is 0. therefore this simplifies to r_j
         y_j = batch_reward + GAMMA * T.max(_q_hat, dim=1)[0]
-        #print(T.max(_q_hat, dim=1))
-        #print(T.max(_q_hat, dim=1)[0])
         #endregion
 
         #region PAPER: Algorithm 1 Line 17
@@ -534,16 +444,3 @@ def train(self, old_game_state, action_index, reward, new_game_state, terminatio
         #endregion
 
         self.epoch_logger_current.add_loss(turn_loss=loss.item())
-
-
-def insert_function_code(old, new):
-    print("insert function code")
-    old.__code__ = new.__code__ 
-
-def insert_function_code_rename(old, new):
-    print("insert function code")
-    old.__code__ = new.__code__ 
-    old.__name__ = new.__name__ 
-
-def get_plot_data(self):
-    return [10, 20, 20, 20, 10]
