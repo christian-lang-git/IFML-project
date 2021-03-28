@@ -7,19 +7,17 @@ import math
 
 DQN_TYPE_L2 = "DQN_TYPE_L2"
 DQN_TYPE_L3 = "DQN_TYPE_L3"
-DQN_TYPE_C1L2 = "DQN_TYPE_C1L2"
 DQN_TYPE_C3L1 = "DQN_TYPE_C3L1"
-DQN_TYPE_C3L2 = "DQN_TYPE_C3L2"
 
-"""
-Deep Q Learning Neural Network class with 2 hidden layers
-"""
 class DQN(nn.Module):
     """
-    :param input_dims: TODO
+    Deep Q Learning Neural Network class
     """
-    def __init__(self, model_architecture):#TODO maybe rename to n_in, n_h1, n_h2, n_out
-    #def __init__(self, input_dims, fc1_dims, fc2_dims, n_actions):#TODO maybe rename to n_in, n_h1, n_h2, n_out        
+
+    def __init__(self, model_architecture):   
+        """
+        :param input_dims: TODO
+        """   
         super(DQN, self).__init__()   
         print("__init__ DQN") 
         print("input: ", model_architecture["dim_input"])         
@@ -30,8 +28,8 @@ class DQN(nn.Module):
     def forward(self, state):
         """
         Text
-        :param state: the state TODO.
-        :return actions: estimated value of each action. TODO: value is probably the wrong word here.
+        :param state: the state.
+        :return actions: estimated value of each action.
         """
         pass
 
@@ -41,12 +39,12 @@ class DQN(nn.Module):
         """
         return math.floor((input_size - kernel_size + 2 * padding ) / stride + 1)
 
-    """
-    Copies the state (theta) of the provided other DQN.
-    Since python does not support constructor overloading, this seems more readable than passing *args to the constructor
-    :param other: the DQN whose state (theta) should be copied into this DQN
-    """
     def copy_from(self, other):
+        """
+        Copies the state (theta) of the provided other DQN.
+        Since python does not support constructor overloading, this seems more readable than passing *args to the constructor
+        :param other: the DQN whose state (theta) should be copied into this DQN
+        """
         theta = other.state_dict()
         self.load_state_dict(theta)
 
@@ -124,6 +122,9 @@ class DQN(nn.Module):
             self.load_state_dict(theta)
 
 class DQN_L2(DQN):
+    """
+    Deep Q Learning Neural Network class with 2 fully connected hidden layers
+    """
     def __init__(self, model_architecture):
         super(DQN_L2, self).__init__(model_architecture)        
         print("__init__ DQN_L2")
@@ -146,6 +147,9 @@ class DQN_L2(DQN):
         return actions
 
 class DQN_L3(DQN):
+    """
+    Deep Q Learning Neural Network class with 3 fully connected hidden layers
+    """
     def __init__(self, model_architecture):
         super(DQN_L3, self).__init__(model_architecture)        
         print("__init__ DQN_L3")
@@ -171,37 +175,10 @@ class DQN_L3(DQN):
         #print(actions.size())
         return actions
 
-class DQN_C1L2(DQN):
-    def __init__(self, model_architecture):
-        super(DQN_C1L2, self).__init__(model_architecture)        
-        print("__init__ DQN_C1L2")
-        #store parameters
-        self.dim_layer_full_1 = model_architecture["dim_layer_full_1"]
-        self.dim_layer_full_2 = model_architecture["dim_layer_full_2"]
-        #setup layers
-        channels = self.dim_input[0]
-        self.layer_conv_1 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=5, stride=1)#17x17 --> 13x13
-        self.layer_full_1 = nn.Linear(channels*13*13, self.dim_layer_full_1)
-        self.layer_full_2 = nn.Linear(self.dim_layer_full_1, self.dim_layer_full_2)
-        self.layer_full_3 = nn.Linear(self.dim_layer_full_2, self.dim_output)
-
-    def forward(self, state):       
-        #print("forward DQN_C1L2")
-        #print("forward:", state.size())
-        x = F.relu(self.layer_conv_1(state))
-        #tensor needs to be flattened to 2d to work with fully connected layer
-        #first dimension for batch, second for the flattened part
-        x = T.flatten(x, start_dim=1)
-        #print(x.size())
-        x = F.relu(self.layer_full_1(x))
-        #print(x.size())
-        x = F.relu(self.layer_full_2(x))
-        #print(x.size())
-        actions = self.layer_full_3(x)
-        #print(actions.size())
-        return actions
-
 class DQN_C3L1(DQN):
+    """
+    Deep Q Learning Neural Network class with 3 convolutional and 1 fully connected hidden layers
+    """
     def __init__(self, model_architecture):
         super(DQN_C3L1, self).__init__(model_architecture)        
         print("__init__ DQN_C3L1")
@@ -276,44 +253,6 @@ class DQN_C3L1(DQN):
         #print(actions.size())
         return actions
 
-class DQN_C3L2(DQN):
-    def __init__(self, model_architecture):
-        super(DQN_C3L2, self).__init__(model_architecture)        
-        print("__init__ DQN_C3L2")
-        #store parameters
-        self.dim_layer_full_1 = model_architecture["dim_layer_full_1"]
-        self.dim_layer_full_2 = model_architecture["dim_layer_full_2"]
-        #setup layers
-        channels = self.dim_input[0]
-        self.layer_conv_1 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=5, stride=1)#17x17 --> 13x13
-        self.layer_conv_2 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=3, stride=1)#13x13 --> 11x11
-        self.layer_conv_3 = nn.Conv2d(in_channels=channels, out_channels=channels, kernel_size=3, stride=1)#13x13 --> 9x9
-        self.layer_full_1 = nn.Linear(channels*9*9, self.dim_layer_full_1)
-        self.layer_full_2 = nn.Linear(self.dim_layer_full_1, self.dim_layer_full_2)
-        self.layer_full_3 = nn.Linear(self.dim_layer_full_2, self.dim_output)
-
-    def forward(self, state):       
-        #print("forward DQN_C1L2")
-        #print("forward:", state.size())
-        x = F.relu(self.layer_conv_1(state))
-        #print("A", x.size())
-        x = F.relu(self.layer_conv_2(x))
-        #print("B", x.size())
-        x = F.relu(self.layer_conv_3(x))
-        #print("C", x.size())
-        #tensor needs to be flattened to 2d to work with fully connected layer
-        #first dimension for batch, second for the flattened part
-        x = T.flatten(x, start_dim=1)
-        #print("D", x.size())
-        x = F.relu(self.layer_full_1(x))
-        #print("E", x.size())
-        x = F.relu(self.layer_full_2(x))
-        #print("F", x.size())
-        actions = self.layer_full_3(x)
-        #print(actions.size())
-        return actions
-
-
 def Create_DQN(model_architecture): 
     """
     Creates the correct DQN depending on the model_type specified in model_architecture.
@@ -323,9 +262,7 @@ def Create_DQN(model_architecture):
     MODEL_DICT = {
         DQN_TYPE_L2: DQN_L2, 
         DQN_TYPE_L3: DQN_L3, 
-        DQN_TYPE_C1L2: DQN_C1L2,
         DQN_TYPE_C3L1: DQN_C3L1,
-        DQN_TYPE_C3L2: DQN_C3L2,
         }
     return MODEL_DICT[model_architecture["model_type"]](model_architecture)
 

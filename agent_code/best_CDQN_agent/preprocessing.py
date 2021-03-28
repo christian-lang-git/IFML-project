@@ -78,7 +78,6 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
     #region generate arrays to store the features
     players = np.zeros_like(field, dtype=np.float32)
     f_bombs = -1 * np.ones_like(field, dtype=np.float32)
-    f_coins = -1 * np.ones_like(field, dtype=np.float32)
     #endregion
 
     #region process data and write into arrays
@@ -90,22 +89,13 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
         e_y = enemy[3][1]
         players[e_x, e_y] = -1
         pass
-
+    #bombs
     for bomb in bombs:
         b_x = bomb[0][0]
         b_y = bomb[0][1]
         f_bombs[b_x,b_y] = bomb[1]
-
-    for coin in coins:
-        c_x = coin[0]
-        c_y = coin[1]
-        f_coins[c_x,c_y] = 1
     #endregion
         
-    #region stack the arrays
-    stacked = np.stack((field, players, explosion_map, f_bombs, f_coins))
-    #endregion
-
     coin_attractor, crate_potential_scaled, crate_value = preprocess_coin_and_crates(field=field, coins=coins, processing_cache=processing_cache)
 
     bomb_time_field, bomb_set = preprocess_bomb_time_field(field=field, bombs=bombs)
@@ -116,7 +106,6 @@ def preprocess(game_state: dict, processing_cache: dict, plot: bool) -> np.array
     visited_penalty[field > 0] = -1
     sonar = preprocess_sonar(field=field, players=players, agent_coords=agent_coords)
 
-    #print("preprocess")
     preprocessing_result = np.stack((
         players, coin_attractor, danger_repulsor, bomb_time_field, 
         safety_time_field, field, crate_potential_scaled, crate_value,
@@ -170,44 +159,17 @@ def preprocess_coin_and_crates(field, coins, processing_cache):
         processing_cache["coin_attractor"] = coin_attractor
 
     return coin_attractor, crate_potential_scaled, crate_value
-"""
-Calculates the coin value of each free tile (no wall or crate)
-"""
+
 def preprocess_coin_attractor(field, coins, processing_cache):
-    #data_changed = True
+    """
+    Calculates the coin value of each free tile (no wall or crate)
+    """
     coordinate_deque = deque()
     current_level_size = 0
-    #new_cache_coin_field = -1 * np.ones_like(field, dtype=np.int32)
     for coin in coins:
         current_level_size += 1
         coordinate_deque.append(coin)
-        #new_cache_coin_field[coin[0], coin[1]] = 1
-
-    """
-    #check cache
-    if "coin_field" in processing_cache:
-        data_changed = False
-        #backwards check:
-        old_cache_coin_field = processing_cache["coin_field"]
-        for coin in coins:
-            if old_cache_coin_field[coin[0], coin[1]] != 1:
-                data_changed = True
-        #forward check: 
-        for coin in processing_cache["coins"]:
-            if new_cache_coin_field[coin[0], coin[1]] != 1:
-                data_changed = True
-
-    #if the data has not changed, return cached data
-    if not data_changed:
-        #print("data has not changed")
-        return processing_cache["coin_attractor"]
     
-    #print("data changed")
-
-    #update cache
-    processing_cache["coin_field"] = new_cache_coin_field
-    processing_cache["coins"] = coins
-    """
     #calculate coin attractor
     level = 0
     level_value = 1
@@ -248,15 +210,14 @@ def preprocess_coin_attractor(field, coins, processing_cache):
     coin_attractor_2[field < 0] = -1
     coin_attractor_2[field > 0] = -1
 
-    #update cache and return
-    #processing_cache["coin_attractor"] = coin_attractor_2
     return coin_attractor_2
 
-"""
-Calculates the danger value of each tile (no wall)
-Bomb and enemy tiles are set to max value
-"""
+
 def preprocess_danger_repulsor(agent_coords, field, explosion_map, bombs, enemies, bomb_time_field, bomb_set, safety_time_field):   
+    """
+    Calculates the danger value of each tile (no wall)
+    Bomb and enemy tiles are set to max value
+    """
     danger_repulsor =  np.zeros_like(field, dtype=np.float32)
     for c in bomb_set:
         #danger_repulsor[c] = safety_time_field[c] - bomb_time_field[c]
@@ -277,11 +238,12 @@ def preprocess_danger_repulsor(agent_coords, field, explosion_map, bombs, enemie
 
     return danger_repulsor
 
-"""
-Calculates the minimum bomb time for each tile (no wall)
-(turns until explosion)
-"""
+
 def preprocess_bomb_time_field(field, bombs):
+    """
+    Calculates the minimum bomb time for each tile (no wall)
+    (turns until explosion)
+    """
     x_size = field.shape[0]  
     y_size = field.shape[1]
 
@@ -368,11 +330,12 @@ def preprocess_bomb_time_field(field, bombs):
     
     return bomb_time_field, bomb_set
 
-"""
-Calculates the minimum safety time for each tile (no wall)
-(turns required to reach safe tile)
-"""
+
 def preprocess_safety_time_field(field, players, f_bombs, bomb_time_field, bomb_set):
+    """
+    Calculates the minimum safety time for each tile (no wall)
+    (turns required to reach safe tile)
+    """
     x_size = field.shape[0]  
     y_size = field.shape[1]
 
@@ -387,15 +350,6 @@ def preprocess_safety_time_field(field, players, f_bombs, bomb_time_field, bomb_
         safety_time_field_old = safety_time_field if i % 2 == 0 else safety_time_field_2
         for c in bomb_set: 
             safety_time_field_new[c] = 1 + get_smallest_free_neighbor(field, players, f_bombs, c, safety_time_field_old)
-
-    #for c in bomb_set:        
-    #    safety_time_field_2[c] = 1 + get_smallest_free_neighbor(field, c, safety_time_field)
-
-    #for c in bomb_set:        
-    #    safety_time_field[c] = 1 + get_smallest_free_neighbor(field, c, safety_time_field_2)
-
-    #for c in bomb_set:        
-    #    safety_time_field_2[c] = 1 + get_smallest_free_neighbor(field, c, safety_time_field)
         
     return safety_time_field_new    
 
@@ -419,12 +373,12 @@ def get_smallest_free_neighbor(field, players, f_bombs, coords, array):
         return -1
     m = min(free_list)
     return m
-    #return m if m >= 0 else 0
 
-"""
-Calculates the crate potential and crate value of each tile (no crate or wall)
-"""
+
 def preprocess_crate_data(field, processing_cache):
+    """
+    Calculates the crate potential and crate value of each tile (no crate or wall)
+    """
     crate_potential = preprocess_crate_potential(field=field)
     #crate_potential_scaled = crate_potential.astype(dtype=np.float32)
     crate_potential_scaled = np.divide(crate_potential,10)
@@ -440,10 +394,11 @@ def preprocess_crate_data(field, processing_cache):
     crate_value_2[crate_value > 0] = crate_value[crate_value > 0]
     return crate_potential_scaled_2, crate_value_2
 
-"""
-Calculates the crate potential of each tile (no crate or wall)
-"""
+
 def preprocess_crate_potential(field):   
+    """
+    Calculates the crate potential of each tile (no crate or wall)
+    """
     x_size = field.shape[0]  
     y_size = field.shape[1]
     crate_potential = np.zeros_like(field, dtype=np.int32)
@@ -506,15 +461,13 @@ def preprocess_crate_potential(field):
 
     return crate_potential
 
-"""
-Calculates the crate value of each free tile (no crate or wall)
-"""
+
 def preprocess_crate_value(field, crate_potential):
-    #crate_value = crate_potential.astype(dtype=np.float32)
-    #crate_value = np.divide(crate_value,10)
+    """
+    Calculates the crate value of each free tile (no crate or wall)
+    """
     crate_value = -1 * np.ones_like(crate_potential, dtype=np.float32)
     max_count = np.max(crate_potential)
-    #print(max_count)
     
     #the deque used to propagate the potential
     coordinate_deque = deque()
@@ -524,8 +477,6 @@ def preprocess_crate_value(field, crate_potential):
     #for each crate count, propagate value if greater
     while crate_count > 0:
         level_value = np.divide(crate_count, 10)
-        #print("crate_count", crate_count, "level_value", level_value)
-
         #find all coordinates where the potential is equal to the current crate count
         filter_array = np.where(crate_potential==crate_count)
         coord_list = list(zip(*filter_array))
@@ -563,16 +514,17 @@ def preprocess_crate_value(field, crate_potential):
             current_level_size = next_level_size
             level_value *= CRATE_DISTANCE_DISCOUNT_FACTOR
 
-        #TODO set crate count for next iteration
+        #set crate count for next iteration
         crate_count-=1
     
     #crate_value[coord_array] = 1
     return crate_value
 
-"""
-Calculates inverse distance to the nearest enemy in the 4 cardinal directions
-"""
+
 def preprocess_sonar(field, players, agent_coords):   
+    """
+    Calculates inverse distance to the nearest enemy in the 4 cardinal directions
+    """
     x_size = field.shape[0]  
     y_size = field.shape[1]
 
@@ -662,16 +614,16 @@ def preprocess_sonar(field, players, agent_coords):
     return sonar
 
 
-"""
-Check if the tile is free (no crate or wall)
-"""
 def check_free_tile(coords, field):
+    """
+    Check if the tile is free (no crate or wall)
+    """
     return field[coords[0], coords[1]] > -0.1 and field[coords[0], coords[1]] < 0.1
 
-"""
-Check if the tile is free (no crate or wall or enemy)
-"""
 def check_free_tile_2(coords, field, players, f_bombs):
+    """
+    Check if the tile is free (no crate or wall or enemy)
+    """
     free_field = field[coords[0], coords[1]] > -0.1 and field[coords[0], coords[1]] < 0.1
     free_players = players[coords] > -0.1
     free_bombs = f_bombs[coords] < 0.1

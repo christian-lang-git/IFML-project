@@ -95,19 +95,6 @@ def update_plot(data, fig):
     plt.clim(vmin=-1, vmax=4)
     fig.colorbar(img, ax=ax)
 
-    #axs[1, 0].set(title="coin value")
-    #axs[1, 0].imshow(data[INDEX_COIN_VALUES], interpolation = 'nearest')
-
-    #axs[2, 0].set(title="danger value")
-    #axs[2, 0].imshow(data[INDEX_DANGER_VALUES], interpolation = 'nearest')
-
-    #fig = plt.figure(figsize = (10, 10))
-    #plt.imshow(array2D, interpolation = 'nearest')
-    #plt.gray()
-    #plt.axis('off')
-    #fig.tight_layout()
-    #plt.show()
-
     plt.tight_layout()
 
 def save_plots(data):
@@ -220,12 +207,7 @@ if __name__ == "__main__":
     plt.ion()
     plt.show()
     i = 0
-    #fig, axs = plt.subplots(3, 4)
     fig = plt.figure()
-    #for ax in fig.axes:
-    #    data = load("preprocessing_results.pt")
-    #    img = ax.imshow(data[INDEX_PLAYERS], interpolation = 'nearest')
-    #    fig.colorbar(img, ax=ax)
 
     plt.tight_layout()
     saved = False

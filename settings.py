@@ -2,7 +2,7 @@ import logging
 
 from fallbacks import pygame
 
-ANNOUNCE_RESULTS = False
+ANNOUNCE_RESULTS = True
 #ANNOUNCE_ROUND = 100
 
 # Game properties

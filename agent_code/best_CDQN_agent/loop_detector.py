@@ -2,6 +2,7 @@ import numpy as np
 
 class LoopDetector():
     """
+    UNUSED
     The LoopDetector detects loops based on player position and action used.
     """
     def __init__(self, capacity):
@@ -15,9 +16,13 @@ class LoopDetector():
         #additional data
         self.count = 0# the number of transitions stored. This can be bigger than the capacity.
     
-    """
-    """
-    def store(self, player_position, action_index):          
+
+    def store(self, player_position, action_index):   
+        """
+        store the position action pair
+        :param player_position: position of the agent
+        :param action_index: action chosen
+        """     
         index = self.count % self.capacity
         self.buffer[index] = [*player_position, action_index]
         self.count += 1
@@ -31,8 +36,6 @@ class LoopDetector():
             )[0]
         loop_count = len(indices)
         return loop_count
-        #print("loop_count: ", loop_count)
-        #print(buffer_active)
 
     def reset(self):
         self.count = 0

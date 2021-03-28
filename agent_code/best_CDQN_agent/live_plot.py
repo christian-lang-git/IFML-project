@@ -71,23 +71,6 @@ def update_plot(data_training, data_validation, fig, axs):
     list_training_bad_bomb_percentage = make_percentage(lists_training, INDEX_BAD_BOMB, INDEX_BOMB)
     list_validation_bad_bomb_percentage = make_percentage(lists_validation, INDEX_BAD_BOMB, INDEX_BOMB_DROPPED)
 
-    """
-    print("----------------")
-    print(lists_training[0])
-    print(lists_training[1])
-    print(lists_training[2])
-    print(lists_training[3])
-    print(lists_training[4])
-    print(lists_training[5])
-    print("")
-    print(lists_validation[0])
-    print(lists_validation[1])
-    print(lists_validation[2])
-    print(lists_validation[3])
-    print(lists_validation[4])
-    print(lists_validation[5])
-    """
-
     for ax in fig.axes:
         ax.cla()
     
@@ -113,9 +96,6 @@ def update_plot(data_training, data_validation, fig, axs):
     axs[1, 1].plot(lists_training[INDEX_COINS], COLOR_TRAIN)
     axs[1, 1].plot(lists_validation[INDEX_COINS], COLOR_VALIDATE)
 
-    #axs[2, 1].set(title="mean kills", xlabel="epoch", ylabel="last kills")
-    #axs[2, 1].plot(lists_training[INDEX_KILLS], COLOR_TRAIN)
-    #axs[2, 1].plot(lists_validation[INDEX_KILLS], COLOR_VALIDATE)
     axs[2, 1].set(title="mean loss", xlabel="epoch", ylabel="mean loss")
     axs[2, 1].plot(lists_training[INDEX_LOSS], COLOR_TRAIN)
     axs[2, 1].plot(lists_validation[INDEX_LOSS], COLOR_VALIDATE)
@@ -126,12 +106,6 @@ def update_plot(data_training, data_validation, fig, axs):
     axs[0, 2].plot(lists_training[INDEX_WAIT], COLOR_WAIT, label="wait")
     axs[0, 2].plot(lists_training[INDEX_MOVEMENT], COLOR_MOVEMENT, label="move")
     axs[0, 2].legend(loc="best")
-
-    #axs[1, 2].set(title="training: mean invalid actions", xlabel="epoch", ylabel="mean count")
-    #axs[1, 2].plot(lists_training[INDEX_INVALID_BOMB], COLOR_BOMB, label="bomb")
-    #axs[1, 2].plot(lists_training[INDEX_INVALID_WAIT], COLOR_WAIT, label="wait")
-    #axs[1, 2].plot(lists_training[INDEX_INVALID_MOVEMENT], COLOR_MOVEMENT, label="move")
-    #axs[1, 2].legend(loc="best")
 
     axs[1, 2].set(title="training: mean invalid actions %", xlabel="epoch", ylabel="mean %")
     axs[1, 2].plot(list_training_invalid_bomb_percentage, COLOR_BOMB, label="bomb")
@@ -149,12 +123,6 @@ def update_plot(data_training, data_validation, fig, axs):
     axs[0, 3].plot(lists_validation[INDEX_WAIT], COLOR_WAIT, label="wait")
     axs[0, 3].plot(lists_validation[INDEX_MOVEMENT], COLOR_MOVEMENT, label="move")
     axs[0, 3].legend(loc="best")
-
-    #axs[1, 3].set(title="validation: mean invalid actions", xlabel="epoch", ylabel="mean count")
-    #axs[1, 3].plot(lists_validation[INDEX_INVALID_BOMB], COLOR_BOMB, label="bomb")
-    #axs[1, 3].plot(lists_validation[INDEX_INVALID_WAIT], COLOR_WAIT, label="wait")
-    #axs[1, 3].plot(lists_validation[INDEX_INVALID_MOVEMENT], COLOR_MOVEMENT, label="move")
-    #axs[1, 3].legend(loc="best")
 
     axs[1, 3].set(title="validation: mean invalid actions %", xlabel="epoch", ylabel="mean %")
     axs[1, 3].plot(list_validation_invalid_bomb_percentage, COLOR_BOMB, label="bomb")

@@ -23,40 +23,29 @@ class Cache():
         self.data_new = {}
 
     def get_data(self, process_type, turn_index):
-        #print("try to get data from turn: ", turn_index, "(", process_type, ")")
+        #try to get data with old turn index
         if turn_index == self.turn_index_old:
-            #print("index matches old")
+            #check if data is available for this turn index
             if process_type in self.data_old:
-                #print("has data for ", process_type)
                 return True, self.data_old[process_type]
+            #turn found, but no data available
             else:                
-                #print("has no data for ", process_type)
                 return False, None
+
+        #try to get data with new turn index
         elif turn_index == self.turn_index_old + 1:
-            #print("index matches new")
+            #check if data is available for this turn index
             if process_type in self.data_new:
-                #print("has data for ", process_type)
                 return True, self.data_new[process_type]
+            #turn found, but no data available
             else:                
-                #print("has no data for ", process_type)
                 return False, None
+
+        #turn index does not match --> advance turn
         else:
-            #print("index error")
             self.advance_turn()
-            return False, None
-            #if turn_index == self.turn_index_old:
-            #    print("index matches old")
-            #elif turn_index == self.turn_index_old + 1:
-            #    print("index matches new")
-            
+            return False, None            
 
     def set_data(self, process_type, turn_index, data):
-        #print("try to set data for turn: ", turn_index, "(", process_type, ")")
         if turn_index == self.turn_index_old + 1:
-            #print("index matches new")
             self.data_new[process_type] = data
-        else:
-            #this will probably not happen
-            #print(self.name, " set_data: index error: ", turn_index)
-            pass
-        #return self.data_old[process_type]
